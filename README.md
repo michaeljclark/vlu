@@ -22,9 +22,27 @@ With 8 bit quantum, the encoded size is similar to LEB128,
 Decoding, however, is significantly faster, as it is not
 necessary to check for continuation bits every byte.
 
-The scheme can be modified to support big integers by adding
-continuation bits at a machine word interval (64 bits),
-reducing the SHIFT-MASK-BRANCH frequency by a factor of 8.
+The code can support integers larger than 56-bits by
+interpreting the most significant bit of the unary indicator
+(bit 8 where the n-bit quantum is 8), as a continuation code,
+causing the decoder to append the maximum number of bits from
+the packet and continue decoding by appending the next packet.
+
+```
+  packet_total_bits = bits_per_quantum ^ 2
+  packet_payload_bits = bits_per_quantum * (bits_per_quantum - 1)
+```
+
+It is expected to use an 8-bit quantum for the unary code
+which means the packet size is one machine word (64 bits).
+This reduces the SHIFT-MASK-BRANCH frequency by a factor of 8
+compared to per-byte continuation codes like LEB128.
+
+```
+  bits_per_quantum = 8
+  packet_total_bits = 64
+  packet_payload_bits = 56
+```
 
 ### Encoding
 
@@ -33,6 +51,8 @@ reducing the SHIFT-MASK-BRANCH frequency by a factor of 8.
   encoded  = (integer << shamt) | ((1 << (shamt-1))-1);
 ```
 
+_**Note:** the expression is for one 56-bit packet without continuation bit._
+
 ### Decoding
 
 ```
@@ -40,18 +60,23 @@ reducing the SHIFT-MASK-BRANCH frequency by a factor of 8.
   integer  = encoded >> shamt
 ```
 
+_**Note:** the expression is for one 56-bit packet without continuation bit._
+
 ### Example
 
 The following tables shows variable unary length and payload bit layout:
 
 ```
-  |  byte-8  |  byte-7  |                   |  byte-2  |  byte-1  |
-  |----------|----------|-------------------|----------|----------|
-  |          |          |                   |          | nnnnnnn0 |
-  |          |          |                   | nnnnnnnn | nnnnnn01 |
-  |          | nnnnnnnn | ........ ........ | nnnnnnnn | n0111111 |
-  | nnnnnnnn | nnnnnnnn | ........ ........ | nnnnnnnn | 01111111 |
+ |  byte-1  |          |  byte-8  |  byte-7  |                   |  byte-2  |  byte-1  |
+-|----------|----------|----------|----------|-------------------|----------|----------|
+ |          |          |          |          |                   |          | nnnnnnn0 |
+ |          |  8-byte  |          |          |                   | nnnnnnnn | nnnnnn01 |
+ |          |  packet  |          | nnnnnnnn | ........ ........ | nnnnnnnn | n0111111 |
+ |          |  bound.  | nnnnnnnn | nnnnnnnn | ........ ........ | nnnnnnnn | 01111111 |
+ | nnnnnnn0 |          | nnnnnnnn | nnnnnnnn | ........ ........ | nnnnnnnn | 11111111 |
 ```
+
+(note: 0b)
 
 ### Benchmarks
 
