@@ -66,7 +66,7 @@ This table shows bytes, encoded bits and total bits for VLU8:
 |    ,, |           ,, |           ,, |
 |     n |          n*7 |          n*8 |
 
-### Encoding
+### Encoding pseudo-code
 
 ```
   shamt    = 8 - (clz(num) >> 3)
@@ -75,7 +75,7 @@ This table shows bytes, encoded bits and total bits for VLU8:
 
 _**Note:** the expression is for one 56-bit packet without continuation bit._
 
-### Decoding
+### Decoding pseudo-code
 
 ```
   shamt    = ctz(~encoded) + 1
@@ -84,7 +84,7 @@ _**Note:** the expression is for one 56-bit packet without continuation bit._
 
 _**Note:** the expression is for one 56-bit packet without continuation bit._
 
-### Example
+### Example encoding
 
 The following tables shows variable unary length and payload bit layout:
 
