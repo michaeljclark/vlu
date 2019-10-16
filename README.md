@@ -8,17 +8,16 @@ that prefixes payload bits with an unary coded length.
 The length is recovered by counting least significant one
 bits, which encodes a count of n-bit quantums. The data bits
 are stored in the remaining bits of the first byte followed
-by the number of bytes indicated in the unary value. e.g.
+by the number of bytes indicated in the unary value.
 
 ```
   bits_per_quantum = 8
   unary_value = count_trailing_zeros(not(number))
-  encoded_bits = (unary_value + 1)(bits_per_quantum - 1)
+  encoded_bits = (unary_value + 1) * (bits_per_quantum - 1)
 ```
 
 With 8 bit quantum, the encoded size is similar to LEB128, 
 7-bits can be stored in 1 byte, and 56-bits in 8 bytes.
-
 Decoding, however, is significantly faster, as it is not
 necessary to check for continuation bits every byte.
 
@@ -37,6 +36,7 @@ It is expected to use an 8-bit quantum for the unary code
 which means the packet size is one machine word (64 bits).
 This reduces the SHIFT-MASK-BRANCH frequency by a factor of 8
 compared to per-byte continuation codes like LEB128.
+VLU with an 8-bit quantum shall be referred to as VLU8.
 
 ```
   bits_per_quantum = 8
