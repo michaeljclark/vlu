@@ -73,7 +73,7 @@
  *
  */
 
-uint64_t encode_uvlu(uint64_t num)
+static uint64_t encode_uvlu(uint64_t num)
 {
     size_t leading_zeros = __builtin_clzll(num);
     size_t shamt = 8 - (leading_zeros >> 3);
@@ -81,7 +81,7 @@ uint64_t encode_uvlu(uint64_t num)
     return uvlu;
 }
 
-uint64_t decode_uvlu(uint64_t uvlu)
+static uint64_t decode_uvlu(uint64_t uvlu)
 {
     size_t trailing_ones = __builtin_ctzll(~uvlu);
     size_t shamt = (trailing_ones + 1);
@@ -113,7 +113,7 @@ static U replace_field(U orig, U replacement, int offset, int width) {
  * Simple 64-bit LEB implementation
  */
 
-uint64_t encode_uleb(uint64_t num)
+static uint64_t encode_uleb(uint64_t num)
 {
     uint64_t orig = num;
     uint64_t leb = 0;
@@ -127,7 +127,7 @@ uint64_t encode_uleb(uint64_t num)
     return leb;
 }
 
-uint64_t decode_uleb(uint64_t leb)
+static uint64_t decode_uleb(uint64_t leb)
 {
     uint64_t num = 0;
     for (size_t i = 0; i < 8; i++) {
