@@ -28,6 +28,26 @@
 #include <cstddef>
 
 /*
+ * Bit field macros
+ */
+
+template <typename U>
+static U extract_field(U value, int offset, int width) {
+    return (value >> offset) & ((U(1) << width)-1);
+}
+
+template <typename U>
+static U insert_field(U value, int offset, int width) {
+    return (value & ((U(1) << width)-1)) << offset;
+}
+
+template <typename U>
+static U replace_field(U orig, U replacement, int offset, int width) {
+    return (orig & ~( ((U(1) << width)-1) << offset) ) |
+        (replacement & ((U(1) << width)-1)) << offset;
+}
+
+/*
  * Variable Length Unary
  *
  * VLU is a little-endian variable length integer coding
@@ -75,13 +95,42 @@
  *
  */
 
+/*
+ * uvlu_size - VLU8 packet size in bytes
+ */
 static int uvlu_size(uint64_t num)
 {
     int leading_zeros = __builtin_clzll(num);
     return 9 - ((leading_zeros - 1) / 7);
 }
 
-static uint64_t encode_uvlu(uint64_t num)
+/*
+ * encode_uvlu_56 - VLU8 encoding up to 56-bits
+ */
+static uint64_t encode_uvlu_56(uint64_t num)
+{
+    int leading_zeros = __builtin_clzll(num);
+    int trailing_ones = 8 - ((leading_zeros - 1) / 7);
+    int shamt = trailing_ones + 1;
+    uint64_t uvlu = (num << shamt) | (((num!=0) << (shamt-1))-(num!=0));
+    return uvlu;
+}
+
+/*
+ * decode_uvlu_56 - VLU8 decoding up to 56-bits
+ */
+static uint64_t decode_uvlu_56(uint64_t uvlu)
+{
+    int trailing_ones = __builtin_ctzll(~uvlu);
+    int shamt = trailing_ones + 1;
+    uint64_t num = uvlu >> shamt;
+    return num;
+}
+
+/*
+ * encode_uvlu_c - VLU8 encoding with continuation support
+ */
+static uint64_t encode_uvlu_c(uint64_t num)
 {
     int leading_zeros = __builtin_clzll(num);
     int trailing_ones = 8 - ((leading_zeros - 1) / 7);
@@ -92,7 +141,10 @@ static uint64_t encode_uvlu(uint64_t num)
     return uvlu;
 }
 
-static uint64_t decode_uvlu(uint64_t uvlu)
+/*
+ * decode_uvlu_c - VLU8 decoding with continuation support
+ */
+static uint64_t decode_uvlu_c(uint64_t uvlu)
 {
     int trailing_ones = __builtin_ctzll(~uvlu);
     bool continuation = trailing_ones > 7;
@@ -102,30 +154,9 @@ static uint64_t decode_uvlu(uint64_t uvlu)
 }
 
 /*
- * Bit manipulation macros
+ * encode_uleb_56 - LEB128 encoding up to 56-bits
  */
-
-template <typename U>
-static U extract_field(U value, int offset, int width) {
-    return (value >> offset) & ((U(1) << width)-1);
-}
-
-template <typename U>
-static U insert_field(U value, int offset, int width) {
-    return (value & ((U(1) << width)-1)) << offset;
-}
-
-template <typename U>
-static U replace_field(U orig, U replacement, int offset, int width) {
-    return (orig & ~( ((U(1) << width)-1) << offset) ) |
-        (replacement & ((U(1) << width)-1)) << offset;
-}
-
-/*
- * Simple 64-bit LEB implementation
- */
-
-static uint64_t encode_uleb(uint64_t num)
+static uint64_t encode_uleb_56(uint64_t num)
 {
     uint64_t orig = num;
     uint64_t leb = 0;
@@ -139,7 +170,10 @@ static uint64_t encode_uleb(uint64_t num)
     return leb;
 }
 
-static uint64_t decode_uleb(uint64_t leb)
+/*
+ * decode_uleb_56 - LEB128 decoding up to 56-bits
+ */
+static uint64_t decode_uleb_56(uint64_t leb)
 {
     uint64_t num = 0;
     for (size_t i = 0; i < 8; i++) {

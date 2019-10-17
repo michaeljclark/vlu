@@ -45,14 +45,19 @@ void test_encode_uvlu()
 {
     bench_random random;
 
-    assert(encode_uvlu(0) == 0b0);
-    assert(encode_uvlu(1) == 0b10);
-    assert(encode_uvlu(2) == 0b100);
-    assert(encode_uvlu(0x00ffffffffffffff) == 0xffffffffffffff7f);
+    assert(encode_uvlu_56(0) == 0b0);
+    assert(encode_uvlu_56(1) == 0b10);
+    assert(encode_uvlu_56(2) == 0b100);
+    assert(encode_uvlu_56(0x00ffffffffffffff) == 0xffffffffffffff7f);
+
+    assert(encode_uvlu_c(0) == 0b0);
+    assert(encode_uvlu_c(1) == 0b10);
+    assert(encode_uvlu_c(2) == 0b100);
+    assert(encode_uvlu_c(0x00ffffffffffffff) == 0xffffffffffffff7f);
 
     for (size_t i = 0; i < 100; i++) {
         uint64_t val = random.next_pure();
-        assert(decode_uvlu(encode_uvlu(val)) == val);
+        assert(decode_uvlu_56(encode_uvlu_56(val)) == val);
     }
 }
 
@@ -60,13 +65,13 @@ void test_encode_uleb()
 {
     bench_random random;
 
-    assert(decode_uleb(0x268EE5) == 624485);
-    assert(encode_uleb(624485) == 0x268EE5);
-    assert(decode_uleb(encode_uleb(4521192081866880ull)) == 4521192081866880ull);
+    assert(decode_uleb_56(0x268EE5) == 624485);
+    assert(encode_uleb_56(624485) == 0x268EE5);
+    assert(decode_uleb_56(encode_uleb_56(4521192081866880ull)) == 4521192081866880ull);
 
     for (size_t i = 0; i < 100; i++) {
         uint64_t val = random.next_pure();
-        assert(decode_uleb(encode_uleb(val)) == val);
+        assert(decode_uleb_56(encode_uleb_56(val)) == val);
     }
 }
 
