@@ -108,15 +108,21 @@ Benchmarks run on a single-core of an Intel Core i9-7980XE CPU at \~4.0GHz:
 
 |Benchmark                     |Item count|Iterations|Size KiB  |Time µs   |GiB/sec   |
 |------------------------------|----------|----------|----------|----------|----------|
-|BARE                          |1048576   |1000      |8000      |651623    |   11.989 |
-|LEB encode (random)           |1048576   |1000      |8000      |4597423   |    1.699 |
-|LEB decode (random)           |1048576   |1000      |8000      |3338013   |    2.340 |
-|LEB encode (weighted)         |1048576   |1000      |8000      |7136777   |    1.095 |
-|LEB decode (weighted)         |1048576   |1000      |8000      |6826465   |    1.144 |
-|VLU encode (random)           |1048576   |1000      |8000      |1122738   |    6.958 |
-|VLU decode (random)           |1048576   |1000      |8000      |798394    |    9.785 |
-|VLU encode (weighted)         |1048576   |1000      |8000      |1122009   |    6.963 |
-|VLU decode (weighted)         |1048576   |1000      |8000      |804048    |    9.716 |
+|BARE                          |1048576   |1000      |8000      |625283    |   12.494 |
+|LEB_56 encode (random)        |1048576   |1000      |8000      |5466135   |    1.429 |
+|LEB_56 decode (random)        |1048576   |1000      |8000      |4413817   |    1.770 |
+|LEB_56 encode (weighted)      |1048576   |1000      |8000      |8049317   |    0.971 |
+|LEB_56 decode (weighted)      |1048576   |1000      |8000      |7409354   |    1.054 |
+|VLU_56 encode (random)        |1048576   |1000      |8000      |2087182   |    3.743 |
+|VLU_56 decode (random)        |1048576   |1000      |8000      |788366    |    9.910 |
+|VLU_56 encode (weighted)      |1048576   |1000      |8000      |2082917   |    3.751 |
+|VLU_56 decode (weighted)      |1048576   |1000      |8000      |796852    |    9.804 |
+|VLU_56C encode (random)       |1048576   |1000      |8000      |2902893   |    2.691 |
+|VLU_56C decode (random)       |1048576   |1000      |8000      |895172    |    8.727 |
+|VLU_56C encode (weighted)     |1048576   |1000      |8000      |2870418   |    2.722 |
+|VLU_56C decode (weighted)     |1048576   |1000      |8000      |902739    |    8.654 |
+
+_**Note:** 'VLU_56C' denotes the VLU decoder variant that checks for continuations._
 
 ## Example code
 
