@@ -1,6 +1,6 @@
 # vlu
 
-TEST_PROGS = build/bin/vlu_bench build/bin/vlu_demo build/bin/vlu_test
+TEST_PROGS = build/vlu_bench build/vlu_demo build/vlu_test
 
 CXXFLAGS =  -std=c++11 -march=haswell -g -O3
 
@@ -18,8 +18,8 @@ else
 cmd = @echo "$1"; mkdir -p $2 ; $3
 endif
 
-build/bin/vlu_%: build/obj/vlu_%.o
+build/vlu_%: build/vlu_%.o
 	$(call cmd,LD $@,$(@D),$(CXX) $(CXXFLAGS) $< -o $@)
 
-build/obj/%.o: src/%.cc
+build/%.o: src/%.cc
 	$(call cmd,CC $@,$(@D),$(CXX) $(CXXFLAGS) -c $^ -o $@)
