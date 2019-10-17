@@ -37,36 +37,9 @@ which means the packet size is one machine word (64 bits).
 This reduces the SHIFT-MASK-BRANCH frequency by a factor of 8
 compared to per-byte continuation codes like LEB128. A VLU8
 implementation can fetch 64-bits and process 56-bits at once.
-
-
-### VLU8
-
 VLU with an 8-bit quantum shall be referred to as VLU8.
 
-```
-  bits_per_quantum = 8
-  packet_total_bits = 64
-  packet_payload_bits = 56
-```
-
-This table shows bytes, encoded bits and total bits for VLU8:
-
-| Bytes | Payload Bits |   Total Bits |
-|-------|--------------|--------------|
-|     1 |            7 |            8 |
-|     2 |           14 |           16 |
-|     3 |           21 |           24 |
-|     4 |           28 |           32 |
-|     5 |           35 |           40 |
-|     6 |           42 |           48 |
-|     7 |           49 |           56 |
-|     8 |           56 |           64 |
-|     9 |           63 |           72 |
-|    10 |           70 |           80 |
-|    ,, |           ,, |           ,, |
-|     n |          n*7 |          n*8 |
-
-### Encoding pseudo-code
+### Encoder pseudo-code
 
 ```
   shamt    = 8 - ((clz(num) - 1) / 7) + 1
@@ -77,7 +50,7 @@ This table shows bytes, encoded bits and total bits for VLU8:
 
 _**Note:** the expression is for one 56-bit packet without continuation bit._
 
-### Decoding pseudo-code
+### Decoder pseudo-code
 
 ```
   shamt    = ctz(~encoded) + 1
@@ -102,7 +75,7 @@ The following tables shows variable unary length and payload bit layout:
 
 (note: 0b)
 
-### Benchmarks
+## Benchmarks
 
 Benchmarks run on a single-core of an Intel Core i9-7980XE CPU at \~4.0GHz:
 
@@ -123,6 +96,25 @@ Benchmarks run on a single-core of an Intel Core i9-7980XE CPU at \~4.0GHz:
 |VLU_56C decode (weighted)     |1048576   |1000      |8000      |902739    |    8.654 |
 
 _**Note:** 'VLU_56C' denotes the VLU decoder variant that checks for continuations._
+
+## Statistics
+
+This table shows bytes, encoded bits and total bits for VLU8:
+
+| Bytes | Payload Bits |   Total Bits |
+|-------|--------------|--------------|
+|     1 |            7 |            8 |
+|     2 |           14 |           16 |
+|     3 |           21 |           24 |
+|     4 |           28 |           32 |
+|     5 |           35 |           40 |
+|     6 |           42 |           48 |
+|     7 |           49 |           56 |
+|     8 |           56 |           64 |
+|     9 |           63 |           72 |
+|    10 |           70 |           80 |
+|    ,, |           ,, |           ,, |
+|     n |          n*7 |          n*8 |
 
 ## Example code
 
