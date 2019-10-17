@@ -2,7 +2,7 @@
 
 TEST_PROGS = build/bin/vlu_bench build/bin/vlu_demo build/bin/vlu_test
 
-CXXFLAGS =  -std=c++17 -march=haswell -g -O3
+CXXFLAGS =  -std=c++11 -march=haswell -g -O3
 
 all: $(TEST_PROGS)
 

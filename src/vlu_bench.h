@@ -35,6 +35,7 @@ struct bench_random
     bench_random() :
         random_engine(random_device()),
         random_dist(0,(1ull<<56)-1ull) {}
+    bench_random(bench_random&&) : bench_random() {}
 
     uint64_t next_pure() {
         /* random numbers from 0 - 2^56-1 */
