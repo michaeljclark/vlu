@@ -54,8 +54,10 @@
  *
  * To encode:
  *
- *   shamt    = 8 - (clz(num) >> 3)
- *   encoded  = (integer << shamt) | ((1 << (shamt-1))-1);
+ *   shamt    = 8 - ((clz(num) - 1) / 7) + 1
+ *   encoded  = integer << shamt
+ *   if num ≠ 0 then:
+ *       encoded = encoded | ((1 << (shamt - 1)) - 1)
  *
  * To decode:
  *
@@ -82,15 +84,19 @@ static int uvlu_size(uint64_t num)
 static uint64_t encode_uvlu(uint64_t num)
 {
     int leading_zeros = __builtin_clzll(num);
-    int shamt = 9 - ((leading_zeros - 1) / 7);
-    uint64_t uvlu = (num << shamt) | (((num!=0) << (shamt-1))-(num!=0));
+    int trailing_ones = 8 - ((leading_zeros - 1) / 7);
+    bool continuation = trailing_ones > 7;
+    int shamt = continuation ? 8 : trailing_ones + 1;
+    uint64_t uvlu = (num << shamt) | (((num!=0) << (shamt-1))-(num!=0)) |
+        (-continuation & 0x80);
     return uvlu;
 }
 
 static uint64_t decode_uvlu(uint64_t uvlu)
 {
     int trailing_ones = __builtin_ctzll(~uvlu);
-    int shamt = (trailing_ones + 1);
+    bool continuation = trailing_ones > 7;
+    int shamt = continuation ? 8 : trailing_ones + 1;
     uint64_t num = uvlu >> shamt;
     return num;
 }
