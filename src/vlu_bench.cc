@@ -34,62 +34,7 @@
 #include <sstream>
 
 #include "vlu.h"
-
-/*
- * benchmark random numbers
- */
-
-struct bench_random
-{
-    std::random_device random_device;
-    std::default_random_engine random_engine;
-    std::uniform_int_distribution<uint64_t> random_dist;
-
-    bench_random() :
-        random_engine(random_device()),
-        random_dist(0,(1ull<<56)-1ull) {}
-
-    uint64_t next_pure() {
-        /* random numbers from 0 - 2^56-1 */
-        return random_dist(random_engine);
-    }
-
-    uint64_t next_weighted() {
-        /* random numbers from 0 - 2^56-1 */
-        uint64_t val = random_dist(random_engine);
-        /* (p=0.125 for each size) randomly choose 1 to 8 bytes */
-        switch (val & 0x7) {
-        case 0: return val >> 56;
-        case 1: return val >> 48;
-        case 2: return val >> 40;
-        case 3: return val >> 32;
-        case 4: return val >> 24;
-        case 5: return val >> 16;
-        case 6: return val >> 8;
-        case 7: return val;
-        default: break;
-        }
-        __builtin_unreachable();
-    }
-};
-
-/*
- * benchmark context
- */
-
-struct bench_context
-{
-    const std::string name;
-    const size_t item_count;
-    const size_t iterations;
-
-    std::vector<uint64_t> in;
-    std::vector<uint64_t> out;
-    bench_random random;
-
-    bench_context(std::string name, const size_t item_count, const size_t iterations) :
-        name(name), item_count(item_count), iterations(iterations) {}
-};
+#include "vlu_bench.h"
 
 /*
  * benchmark setup
@@ -253,42 +198,8 @@ static void bench_exec(C ctx, F setup, F bench)
 }
 
 /*
- * simple tests
- */
-
-void test_encode_uvlu()
-{
-    bench_random random;
-
-    for (size_t i = 0; i < 100; i++) {
-        uint64_t val = random.next_pure();
-        assert(decode_uvlu(encode_uvlu(val)) == val);
-    }
-}
-
-void test_encode_uleb()
-{
-    bench_random random;
-
-    assert(decode_uleb(0x268EE5) == 624485);
-    assert(encode_uleb(624485) == 0x268EE5);
-    assert(decode_uleb(encode_uleb(4521192081866880ull)) == 4521192081866880ull);
-
-    for (size_t i = 0; i < 100; i++) {
-        uint64_t val = random.next_pure();
-        assert(decode_uleb(encode_uleb(val)) == val);
-    }
-}
-
-/*
  * main program
  */
-
-void run_tests()
-{
-    test_encode_uvlu();
-    test_encode_uleb();
-}
 
 template<typename C>
 void run_benchmarks(size_t item_count, size_t iterations)
@@ -315,7 +226,6 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    run_tests();
     print_header();
     run_benchmarks<bench_context>(1<<20, iterations);
 

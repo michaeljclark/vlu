@@ -1,6 +1,6 @@
 # vlu
 
-TEST_PROGS = build/bin/vlu_bench
+TEST_PROGS = build/bin/vlu_bench build/bin/vlu_test
 
 CXXFLAGS =  -std=c++17 -march=haswell -g -O3
 
