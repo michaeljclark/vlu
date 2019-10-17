@@ -63,7 +63,7 @@ static void setup_random_uvlu(bench_context &ctx)
     ctx.in.resize(ctx.item_count);
     ctx.out.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = encode_uvlu_56(ctx.random.next_pure());
+        ctx.in[i] = vlu_encode_56(ctx.random.next_pure());
     }
 }
 
@@ -72,7 +72,7 @@ static void setup_weighted_uvlu(bench_context &ctx)
     ctx.in.resize(ctx.item_count);
     ctx.out.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = encode_uvlu_56(ctx.random.next_weighted());
+        ctx.in[i] = vlu_encode_56(ctx.random.next_weighted());
     }
 }
 
@@ -81,7 +81,7 @@ static void setup_random_uleb(bench_context &ctx)
     ctx.in.resize(ctx.item_count);
     ctx.out.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = encode_uleb_56(ctx.random.next_pure());
+        ctx.in[i] = leb_encode_56(ctx.random.next_pure());
     }
 }
 
@@ -90,7 +90,7 @@ static void setup_weighted_uleb(bench_context &ctx)
     ctx.in.resize(ctx.item_count);
     ctx.out.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = encode_uleb_56(ctx.random.next_weighted());
+        ctx.in[i] = leb_encode_56(ctx.random.next_weighted());
     }
 }
 
@@ -105,45 +105,45 @@ static void bench_nop(bench_context &ctx)
     }
 }
 
-static void bench_encode_uvlu_c(bench_context &ctx)
+static void bench_vlu_encode_56c(bench_context &ctx)
 {
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.out[i] = encode_uvlu_c(ctx.in[i]);
+        ctx.out[i] = vlu_encode_56c(ctx.in[i]);
     }
 }
 
-static void bench_decode_uvlu_c(bench_context &ctx)
+static void bench_vlu_decode_56c(bench_context &ctx)
 {
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.out[i] = decode_uvlu_c(ctx.in[i]);
+        ctx.out[i] = vlu_decode_56c(ctx.in[i]);
     }
 }
 
-static void bench_encode_uvlu_56(bench_context &ctx)
+static void bench_vlu_encode_56(bench_context &ctx)
 {
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.out[i] = encode_uvlu_56(ctx.in[i]);
+        ctx.out[i] = vlu_encode_56(ctx.in[i]);
     }
 }
 
-static void bench_decode_uvlu_56(bench_context &ctx)
+static void bench_vlu_decode_56(bench_context &ctx)
 {
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.out[i] = decode_uvlu_56(ctx.in[i]);
+        ctx.out[i] = vlu_decode_56(ctx.in[i]);
     }
 }
 
-static void bench_encode_uleb_56(bench_context &ctx)
+static void bench_leb_encode_56(bench_context &ctx)
 {
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.out[i] = encode_uleb_56(ctx.in[i]);
+        ctx.out[i] = leb_encode_56(ctx.in[i]);
     }
 }
 
-static void bench_decode_uleb_56(bench_context &ctx)
+static void bench_leb_decode_56(bench_context &ctx)
 {
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.out[i] = decode_uleb_56(ctx.in[i]);
+        ctx.out[i] = leb_decode_56(ctx.in[i]);
     }
 }
 
@@ -219,18 +219,18 @@ template<typename C>
 void run_benchmarks(size_t item_count, size_t iterations)
 {
     bench_exec(C("BARE",                  item_count, iterations), setup_random,        bench_nop        );
-    bench_exec(C("LEB_56 encode (random)",   item_count, iterations), setup_random,        bench_encode_uleb_56);
-    bench_exec(C("LEB_56 decode (random)",   item_count, iterations), setup_random_uleb,   bench_decode_uleb_56);
-    bench_exec(C("LEB_56 encode (weighted)", item_count, iterations), setup_weighted,      bench_encode_uleb_56);
-    bench_exec(C("LEB_56 decode (weighted)", item_count, iterations), setup_weighted_uleb, bench_decode_uleb_56);
-    bench_exec(C("VLU_56 encode (random)",   item_count, iterations), setup_random,        bench_encode_uvlu_56);
-    bench_exec(C("VLU_56 decode (random)",   item_count, iterations), setup_random_uvlu,   bench_decode_uvlu_56);
-    bench_exec(C("VLU_56 encode (weighted)", item_count, iterations), setup_weighted,      bench_encode_uvlu_56);
-    bench_exec(C("VLU_56 decode (weighted)", item_count, iterations), setup_weighted_uvlu, bench_decode_uvlu_56);
-    bench_exec(C("VLU_C  encode (random)",   item_count, iterations), setup_random,        bench_encode_uvlu_c);
-    bench_exec(C("VLU_C  decode (random)",   item_count, iterations), setup_random_uvlu,   bench_decode_uvlu_c);
-    bench_exec(C("VLU_C  encode (weighted)", item_count, iterations), setup_weighted,      bench_encode_uvlu_c);
-    bench_exec(C("VLU_C  decode (weighted)", item_count, iterations), setup_weighted_uvlu, bench_decode_uvlu_c);
+    bench_exec(C("LEB_56 encode (random)",   item_count, iterations), setup_random,        bench_leb_encode_56);
+    bench_exec(C("LEB_56 decode (random)",   item_count, iterations), setup_random_uleb,   bench_leb_decode_56);
+    bench_exec(C("LEB_56 encode (weighted)", item_count, iterations), setup_weighted,      bench_leb_encode_56);
+    bench_exec(C("LEB_56 decode (weighted)", item_count, iterations), setup_weighted_uleb, bench_leb_decode_56);
+    bench_exec(C("VLU_56 encode (random)",   item_count, iterations), setup_random,        bench_vlu_encode_56);
+    bench_exec(C("VLU_56 decode (random)",   item_count, iterations), setup_random_uvlu,   bench_vlu_decode_56);
+    bench_exec(C("VLU_56 encode (weighted)", item_count, iterations), setup_weighted,      bench_vlu_encode_56);
+    bench_exec(C("VLU_56 decode (weighted)", item_count, iterations), setup_weighted_uvlu, bench_vlu_decode_56);
+    bench_exec(C("VLU_56C encode (random)",   item_count, iterations), setup_random,        bench_vlu_encode_56c);
+    bench_exec(C("VLU_56C decode (random)",   item_count, iterations), setup_random_uvlu,   bench_vlu_decode_56c);
+    bench_exec(C("VLU_56C encode (weighted)", item_count, iterations), setup_weighted,      bench_vlu_encode_56c);
+    bench_exec(C("VLU_56C decode (weighted)", item_count, iterations), setup_weighted_uvlu, bench_vlu_decode_56c);
 }
 
 int main(int argc, char **argv)

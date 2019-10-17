@@ -122,10 +122,10 @@ Benchmarks run on a single-core of an Intel Core i9-7980XE CPU at \~4.0GHz:
 
 ### Encoder (C)
 
-Example 64-bit encoder:
+Example 64-bit VLU encoder:
 
 ```C
-uint64_t encode_uvlu_56(uint64_t num)
+uint64_t vlu_encode_56(uint64_t num)
 {
     int leading_zeros = __builtin_clzll(num);
     int trailing_ones = 8 - ((leading_zeros - 1) / 7);
@@ -137,10 +137,10 @@ uint64_t encode_uvlu_56(uint64_t num)
 
 ### Decoder (C)
 
-Example 64-bit decoder:
+Example 64-bit VLU decoder:
 
 ```C
-uint64_t decode_uvlu_56(uint64_t uvlu)
+uint64_t vlu_decode_56(uint64_t uvlu)
 {
     int trailing_ones = __builtin_ctzll(~uvlu);
     int shamt = (trailing_ones + 1);
@@ -154,7 +154,7 @@ uint64_t decode_uvlu_56(uint64_t uvlu)
 5 instructions to decode 64-bit VLU packet on x86_64 Haswell with BMI2 _(runs at ~ 80% of uncompressed speed)_:
 
 ```asm
-decode_uvlu_56:
+vlu_decode_56:
         mov     rax, rdi
         not     rax
         tzcnt   rax, rax
@@ -165,7 +165,7 @@ decode_uvlu_56:
 Compare to 64-bit LEB packet on x86_64 _(loops up to 8 times per word, runs at ~ 10 to 20% of uncompressed speed)_:
 
 ```asm
-decode_uleb_56:
+leb_decode_56:
         xor     eax, eax
         xor     esi, esi
         xor     r9d, r9d
