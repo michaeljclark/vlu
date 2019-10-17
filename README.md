@@ -69,8 +69,10 @@ This table shows bytes, encoded bits and total bits for VLU8:
 ### Encoding pseudo-code
 
 ```
-  shamt    = 8 - (clz(num) >> 3)
-  encoded  = (integer << shamt) | ((1 << (shamt-1))-1);
+  shamt    = 9 - ((clz(num) - 1) / 7)
+  encoded  = integer << shamt
+  if num ≠ 0 then:
+      encoded = encoded | ((1 << (shamt - 1)) - 1)
 ```
 
 _**Note:** the expression is for one 56-bit packet without continuation bit._
@@ -127,7 +129,7 @@ uint64_t encode_uvlu(uint64_t num)
 {
     size_t leading_zeros = __builtin_clzll(num);
     size_t shamt = 8 - (leading_zeros >> 3);
-    uint64_t uvlu = (num << shamt) | ((1ull << (shamt-1))-1);
+    uint64_t uvlu = (num << shamt) | (((num!=0) << (shamt-1))-(num!=0));
     return uvlu;
 }
 ```

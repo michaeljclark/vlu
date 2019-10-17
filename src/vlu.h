@@ -73,18 +73,24 @@
  *
  */
 
+static int uvlu_size(uint64_t num)
+{
+    int leading_zeros = __builtin_clzll(num);
+    return 9 - ((leading_zeros - 1) / 7);
+}
+
 static uint64_t encode_uvlu(uint64_t num)
 {
-    size_t leading_zeros = __builtin_clzll(num);
-    size_t shamt = 8 - (leading_zeros >> 3);
-    uint64_t uvlu = (num << shamt) | ((1ull << (shamt-1))-1);
+    int leading_zeros = __builtin_clzll(num);
+    int shamt = 9 - ((leading_zeros - 1) / 7);
+    uint64_t uvlu = (num << shamt) | (((num!=0) << (shamt-1))-(num!=0));
     return uvlu;
 }
 
 static uint64_t decode_uvlu(uint64_t uvlu)
 {
-    size_t trailing_ones = __builtin_ctzll(~uvlu);
-    size_t shamt = (trailing_ones + 1);
+    int trailing_ones = __builtin_ctzll(~uvlu);
+    int shamt = (trailing_ones + 1);
     uint64_t num = uvlu >> shamt;
     return num;
 }
