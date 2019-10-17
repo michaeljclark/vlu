@@ -69,7 +69,7 @@ This table shows bytes, encoded bits and total bits for VLU8:
 ### Encoding pseudo-code
 
 ```
-  shamt    = 9 - ((clz(num) - 1) / 7)
+  shamt    = 8 - ((clz(num) - 1) / 7) + 1
   encoded  = integer << shamt
   if num ≠ 0 then:
       encoded = encoded | ((1 << (shamt - 1)) - 1)
@@ -127,8 +127,9 @@ Example 64-bit encoder:
 ```C
 uint64_t encode_uvlu(uint64_t num)
 {
-    size_t leading_zeros = __builtin_clzll(num);
-    size_t shamt = 8 - (leading_zeros >> 3);
+    int leading_zeros = __builtin_clzll(num);
+    int trailing_ones = 8 - ((leading_zeros - 1) / 7);
+    int shamt = trailing_ones + 1;
     uint64_t uvlu = (num << shamt) | (((num!=0) << (shamt-1))-(num!=0));
     return uvlu;
 }
@@ -141,8 +142,8 @@ Example 64-bit decoder:
 ```C
 uint64_t decode_uvlu(uint64_t uvlu)
 {
-    size_t trailing_ones = __builtin_ctzll(~uvlu);
-    size_t shamt = (trailing_ones + 1);
+    int trailing_ones = __builtin_ctzll(~uvlu);
+    int shamt = (trailing_ones + 1);
     uint64_t num = uvlu >> shamt;
     return num;
 }
