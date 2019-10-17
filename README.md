@@ -7,8 +7,8 @@ that prefixes payload bits with an unary coded length.
 
 The length is recovered by counting least significant one
 bits, which encodes a count of n-bit quantums. The data bits
-are stored in the remaining bits of the first byte followed
-by the number of bytes indicated in the unary value.
+are stored in the remaining bits of the first n-bit quantum
+followed by the number of bits indicated by the unary value.
 
 ```
   bits_per_quantum = 8
