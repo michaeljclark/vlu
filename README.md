@@ -65,22 +65,6 @@ _**Note:** the expression is for one 56-bit packet without continuation bit._
 
 _**Note:** the expression is for one 56-bit packet without continuation bit._
 
-### Example encoding
-
-The following tables shows variable unary length and payload bit layout:
-
-```
- |  byte-1  |          |  byte-8  |  byte-7  |                   |  byte-2  |  byte-1  |
--|----------|----------|----------|----------|-------------------|----------|----------|
- |          |          |          |          |                   |          | nnnnnnn0 |
- |          |  8-byte  |          |          |                   | nnnnnnnn | nnnnnn01 |
- |          |  packet  |          | nnnnnnnn | ........ ........ | nnnnnnnn | n0111111 |
- |          |  bound.  | nnnnnnnn | nnnnnnnn | ........ ........ | nnnnnnnn | 01111111 |
- | nnnnnnn0 |          | nnnnnnnn | nnnnnnnn | ........ ........ | nnnnnnnn | 11111111 |
-```
-
-(note: 0b)
-
 ## Benchmarks
 
 Benchmarks run on a single-core of an Intel Core i9-7980XE CPU at \~4.0GHz:
