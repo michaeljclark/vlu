@@ -10,6 +10,12 @@ bits, which encodes a count of n-bit quantums. The data bits
 are stored in the remaining bits of the first n-bit quantum
 followed by the number of bits indicated by the unary value.
 
+![vlu](/vlu.png)
+_Figure 1: VLU - Variable Length Unary Integer Coding_
+
+The algorithm is parameterizable for different word and packet
+sizes, however it is expected that an 8 bit quantum is used.
+
 ```
   bits_per_quantum = 8
   unary_value = count_trailing_zeros(not(number))
