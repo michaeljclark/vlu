@@ -38,8 +38,8 @@ the packet and continue decoding by appending the next packet.
   packet_payload_bits = bits_per_quantum * (bits_per_quantum - 1)
 ```
 
-It is expected to use an 8-bit quantum for the unary code
-which means the packet size is one machine word (64 bits).
+An 8-bit quantum for the unary code means the packet size is
+one machine word (64 bits).
 This reduces the SHIFT-MASK-BRANCH frequency by a factor of 8
 compared to per-byte continuation codes like LEB128. A VLU8
 implementation can fetch 64-bits and process 56-bits at once.
