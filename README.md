@@ -1,4 +1,4 @@
-# Variable Length Unary
+# Variable Length Unary Integer Coding
 
 ## Overview
 
