@@ -151,12 +151,45 @@ struct vlu_result
     int64_t shamt;
 };
 
+#if defined (__GNUC__) && defined(__x86_64__)
+static vlu_result vlu_decode_56c(uint64_t vlu)
+{
+    /*
+     * Optimized Intel assembly language
+     *
+     *    mov     rax, rdi
+     *    not     rax
+     *    tzcnt   rax, rax
+     *    cmp     rax, 0x7
+     *    lea     rdx, [rax + 1]
+     *    mov     rax, 0x8
+     *    cmovg   rdx, rax
+     *    shrx    rax, rdi, rdx
+     *    ret     ; struct { rax; rdx; }
+     */
+    struct vlu_result r;
+    uint64_t tmp1;
+    asm volatile (
+        "tzcnt   %[tmp1], %[tmp1]           \n\t"
+        "cmp     $0x7, %[tmp1]              \n\t"
+        "lea     1(%[tmp1]),%[shamt]        \n\t"
+        "mov     $0x8, %[tmp1]              \n\t"
+        "cmovg   %[tmp1], %[shamt]          \n\t"
+        "shrx    %[shamt], %[vlu], %[val]   "
+        : [val] "=r" (r.val), [shamt] "=r" (r.shamt)
+        : [vlu] "r" (vlu), [tmp1] "r" (~vlu)
+        : "cc"
+    );
+    return r;
+}
+#else
 static vlu_result vlu_decode_56c(uint64_t vlu)
 {
     int trailing_ones = __builtin_ctzll(~vlu);
     int shamt = trailing_ones > 7 ? 8 : trailing_ones + 1;
     return vlu_result{ vlu >> shamt, shamt };
 }
+#endif
 
 /*
  * leb_encode_56 - LEB128 encoding up to 56-bits
