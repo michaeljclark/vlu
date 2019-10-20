@@ -115,7 +115,7 @@ static void bench_vlu_encode_56c(bench_context &ctx)
 static void bench_vlu_decode_56c(bench_context &ctx)
 {
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.out[i] = vlu_decode_56c(ctx.in[i]);
+        ctx.out[i] = vlu_decode_56c(ctx.in[i]).val;
     }
 }
 

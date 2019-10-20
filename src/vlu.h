@@ -144,13 +144,18 @@ static uint64_t vlu_encode_56c(uint64_t num)
 /*
  * vlu_decode_56c - VLU8 decoding with continuation support
  */
-static uint64_t vlu_decode_56c(uint64_t uvlu)
+
+struct vlu_result
 {
-    int trailing_ones = __builtin_ctzll(~uvlu);
-    bool continuation = trailing_ones > 7;
-    int shamt = continuation ? 8 : trailing_ones + 1;
-    uint64_t num = uvlu >> shamt;
-    return num;
+    uint64_t val;
+    int64_t shamt;
+};
+
+static vlu_result vlu_decode_56c(uint64_t vlu)
+{
+    int trailing_ones = __builtin_ctzll(~vlu);
+    int shamt = trailing_ones > 7 ? 8 : trailing_ones + 1;
+    return vlu_result{ vlu >> shamt, shamt };
 }
 
 /*
