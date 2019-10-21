@@ -100,8 +100,8 @@ static U replace_field(U orig, U replacement, int offset, int width) {
  */
 static int vlu_size_56(uint64_t num)
 {
-    int leading_zeros = __builtin_clzll(num);
-    return 9 - ((leading_zeros - 1) / 7);
+    int lz = __builtin_clzll(num);
+    return 9 - ((lz - 1) / 7);
 }
 
 /*
@@ -109,9 +109,9 @@ static int vlu_size_56(uint64_t num)
  */
 static uint64_t vlu_encode_56(uint64_t num)
 {
-    int leading_zeros = __builtin_clzll(num);
-    int trailing_ones = 8 - ((leading_zeros - 1) / 7);
-    int shamt = trailing_ones + 1;
+    int lz = __builtin_clzll(num);
+    int t1 = 8 - ((lz - 1) / 7);
+    int shamt = t1 + 1;
     uint64_t uvlu = (num << shamt) | (((num!=0) << (shamt-1))-(num!=0));
     return uvlu;
 }
@@ -121,8 +121,8 @@ static uint64_t vlu_encode_56(uint64_t num)
  */
 static uint64_t vlu_decode_56(uint64_t uvlu)
 {
-    int trailing_ones = __builtin_ctzll(~uvlu);
-    int shamt = trailing_ones + 1;
+    int t1 = __builtin_ctzll(~uvlu);
+    int shamt = t1 + 1;
     uint64_t num = uvlu >> shamt;
     return num;
 }
@@ -132,12 +132,13 @@ static uint64_t vlu_decode_56(uint64_t uvlu)
  */
 static uint64_t vlu_encode_56c(uint64_t num)
 {
-    int leading_zeros = __builtin_clzll(num);
-    int trailing_ones = 8 - ((leading_zeros - 1) / 7);
-    bool continuation = trailing_ones > 7;
-    int shamt = continuation ? 8 : trailing_ones + 1;
-    uint64_t uvlu = (num << shamt) | (((num!=0) << (shamt-1))-(num!=0)) |
-        (-continuation & 0x80);
+    int lz = __builtin_clzll(num);
+    int t1 = 8 - ((lz - 1) / 7);
+    bool cont = t1 > 7;
+    int shamt = cont ? 8 : t1 + 1;
+    uint64_t uvlu = (num << shamt) |
+        (((num!=0) << (shamt-1))-(num!=0)) |
+        (-cont & 0x80);
     return uvlu;
 }
 
@@ -185,8 +186,8 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 #else
 static vlu_result vlu_decode_56c(uint64_t vlu)
 {
-    int trailing_ones = __builtin_ctzll(~vlu);
-    int shamt = trailing_ones > 7 ? 8 : trailing_ones + 1;
+    int t1 = __builtin_ctzll(~vlu);
+    int shamt = t1 > 7 ? 8 : t1 + 1;
     return vlu_result{ vlu >> shamt, shamt };
 }
 #endif
