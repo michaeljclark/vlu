@@ -45,25 +45,54 @@ compared to per-byte continuation codes like LEB128. A VLU8
 implementation can fetch 64-bits and process 56-bits at once.
 VLU with an 8-bit quantum shall be referred to as VLU8.
 
+### Continuation support
+
+It is possible to implement a simple continuation scheme limiting
+unary code decoding to 8-bits and signaling a continuation if all
+8 bits of the first byte are set.
+
 ### Encoder pseudo-code
 
+simple implementation:
+
 ```
-  shamt    = 8 - ((clz(num) - 1) / 7) + 1
+  t1       = 8 - ((clz(num) - 1) / 7)
+  shamt    = t1 + 1
   encoded  = integer << shamt
   if num ≠ 0 then:
-      encoded = encoded | ((1 << (shamt - 1)) - 1)
+      encoded = encoded
+              | ((1 << (shamt - 1)) - 1)
 ```
 
-_**Note:** the expression is for one 56-bit packet without continuation bit._
+with bit-8 continuations:
+
+```
+  t1       = 8 - ((clz(num) - 1) / 7)
+  shamt    = t1 > 7 ? 8 : t1 + 1;
+  encoded  = integer << shamt
+  if num ≠ 0 then:
+      encoded = encoded
+              | ((1 << (shamt - 1)) - 1)
+              | (cont ? 0b10000000 : 0)
+```
 
 ### Decoder pseudo-code
 
+simple implementation:
+
 ```
-  shamt    = ctz(~encoded) + 1
+  t1       = ctz(~encoded)
+  shamt    = t1 + 1
   integer  = encoded >> shamt
 ```
 
-_**Note:** the expression is for one 56-bit packet without continuation bit._
+with bit-8 continuations:
+
+```
+  t1       = ctz(encoded)
+  shamt    = t1 > 7 ? 8 : t1 + 1;
+  integer  = encoded >> shamt
+```
 
 ## Benchmarks
 
@@ -139,18 +168,52 @@ uint64_t vlu_decode_56(uint64_t uvlu)
 
 ### Decoder (asm)
 
-5 instructions to decode 64-bit VLU packet on x86_64 Haswell with BMI2 _(runs at ~ 80% of uncompressed speed)_:
+#### Variant 1
+
+5 instructions to decode 64-bit VLU packet on x86_64 Haswell with BMI2
+**without continuation support** _(limited to 56-bit)_:
 
 ```asm
 vlu_decode_56:
+        mov     rdx, rdi
+        not     rdx
+        tzcnt   rdx, rdx
+        inc     rdx
+        shrx    rax, rdi, rdx
+        ret
+```
+
+**Note:** _The unary count is returned in `rdx`, to map to the _x86_64_
+structure return ABI, however, the shift does not use the documented
+continuation scheme that limits the unary code to 8-bits, rather it
+simply shifts the 64-bit word by the number of bits in the unary code._
+
+#### Variant 2
+
+8 instructions to decode 64-bit VLU packet on x86_64 Haswell with BMI2
+**with continuation support** _(unlimited)_:
+
+```asm
+vlu_decode_56c:
         mov     rax, rdi
         not     rax
         tzcnt   rax, rax
-        inc     rax
-        shrx    rax, rdi, rax
+        cmp     rax, 0x7
+        lea     rdx, [rax + 1]
+        mov     rax, 0x8
+        cmovg   rdx, rax
+        shrx    rax, rdi, rdx
+        ret
 ```
 
-Compare to 64-bit LEB packet on x86_64 _(loops up to 8 times per word, runs at ~ 10 to 20% of uncompressed speed)_:
+**Note:** _The unary count is returned in `rdx`, to map to the _x86_64_
+structure return ABI. The schedule of `CMP` and `CMOVG` has been
+carefully selected, along with the choice of `LEA` to compose the byte
+count, so that the condition code register is undisturbed._
+
+#### Comparison with LEB
+
+Compare to 64-bit LEB packet on x86_64 _(loops up to 8 times per word)_:
 
 ```asm
 leb_decode_56:
@@ -174,4 +237,5 @@ leb_decode_56:
         jne     .L15
 .L13:
         mov     rax, r9
+        ret
 ```
