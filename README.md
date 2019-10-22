@@ -68,7 +68,8 @@ with bit-8 continuations:
 
 ```
   t1       = 8 - ((clz(num) - 1) / 7)
-  shamt    = t1 > 7 ? 8 : t1 + 1;
+  cont     = t1 > 7
+  shamt    = cont ? 8 : t1 + 1
   encoded  = integer << shamt
   if num ≠ 0 then:
       encoded = encoded
