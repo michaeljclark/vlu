@@ -112,7 +112,8 @@ static uint64_t vlu_encode_56(uint64_t num)
     int lz = __builtin_clzll(num);
     int t1 = 8 - ((lz - 1) / 7);
     int shamt = t1 + 1;
-    uint64_t uvlu = (num << shamt) | (((num!=0) << (shamt-1))-(num!=0));
+    uint64_t uvlu = (num << shamt)
+        | (((num!=0) << (shamt-1))-(num!=0));
     return uvlu;
 }
 
@@ -136,9 +137,9 @@ static uint64_t vlu_encode_56c(uint64_t num)
     int t1 = 8 - ((lz - 1) / 7);
     bool cont = t1 > 7;
     int shamt = cont ? 8 : t1 + 1;
-    uint64_t uvlu = (num << shamt) |
-        (((num!=0) << (shamt-1))-(num!=0)) |
-        (-cont & 0x80);
+    uint64_t uvlu = (num << shamt)
+        | (((num!=0) << (shamt-1))-(num!=0))
+        | (-cont & 0x80);
     return uvlu;
 }
 

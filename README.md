@@ -142,12 +142,15 @@ This table shows bytes, encoded bits and total bits for VLU8:
 Example 64-bit VLU encoder:
 
 ```C
-uint64_t vlu_encode_56(uint64_t num)
+uint64_t vlu_encode_56c(uint64_t num)
 {
-    int leading_zeros = __builtin_clzll(num);
-    int trailing_ones = 8 - ((leading_zeros - 1) / 7);
-    int shamt = trailing_ones + 1;
-    uint64_t uvlu = (num << shamt) | (((num!=0) << (shamt-1))-(num!=0));
+    int lz = __builtin_clzll(num);
+    int t1 = 8 - ((lz - 1) / 7);
+    bool cont = t1 > 7;
+    int shamt = cont ? 8 : t1 + 1;
+    uint64_t uvlu = (num << shamt)
+        | (((num!=0) << (shamt-1))-(num!=0))
+        | (-cont & 0x80);
     return uvlu;
 }
 ```
@@ -157,12 +160,17 @@ uint64_t vlu_encode_56(uint64_t num)
 Example 64-bit VLU decoder:
 
 ```C
-uint64_t vlu_decode_56(uint64_t uvlu)
+struct vlu_result
 {
-    int trailing_ones = __builtin_ctzll(~uvlu);
-    int shamt = (trailing_ones + 1);
-    uint64_t num = uvlu >> shamt;
-    return num;
+    uint64_t val;
+    int64_t shamt;
+};
+
+struct vlu_result vlu_decode_56c(uint64_t vlu)
+{
+    int t1 = __builtin_ctzll(~vlu);
+    int shamt = t1 > 7 ? 8 : t1 + 1;
+    return vlu_result{ vlu >> shamt, shamt };
 }
 ```
 
