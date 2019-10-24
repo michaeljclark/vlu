@@ -46,18 +46,7 @@ struct bench_random
         /* random numbers from 0 - 2^56-1 */
         uint64_t val = random_dist(random_engine);
         /* (p=0.125 for each size) randomly choose 1 to 8 bytes */
-        switch (val & 0x7) {
-        case 0: return val >> 56;
-        case 1: return val >> 48;
-        case 2: return val >> 40;
-        case 3: return val >> 32;
-        case 4: return val >> 24;
-        case 5: return val >> 16;
-        case 6: return val >> 8;
-        case 7: return val;
-        default: break;
-        }
-        __builtin_unreachable();
+        return val >> ((val & 0x7) << 3);
     }
 };
 
