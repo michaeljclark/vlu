@@ -75,6 +75,19 @@ void test_encode_uleb()
     }
 }
 
+void test_encode_decode()
+{
+    std::vector<uint64_t> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    std::vector<uint8_t> d2;
+    std::vector<uint64_t> d3;
+    vlu_encode_loop(d2, d1);
+    vlu_decode_loop(d3, d2);
+    assert(d1.size() == d3.size());
+    for (size_t i = 0; i < d1.size(); i++) {
+        assert(d1[i] == d3[i]);
+    }
+}
+
 /*
  * main program
  */
@@ -84,6 +97,7 @@ void run_tests()
 {
     test_encode_uvlu();
     test_encode_uleb();
+    test_encode_decode();
 }
 
 int main(int argc, char **argv)

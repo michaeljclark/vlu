@@ -26,6 +26,9 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <cstring>
+#include <cassert>
+#include <vector>
 
 #include "bits.h"
 
@@ -206,6 +209,34 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
     return vlu_result{ num, shamt };
 }
 #endif
+
+/*
+ * vlu_encode_loop - encode array
+ */
+static size_t vlu_encode_loop(std::vector<uint8_t> &dst, std::vector<uint64_t> &src)
+{
+    size_t l = src.size();
+    for (size_t i = 0 ; i < l; i++) {
+        vlu_result r = vlu_encode_56c(src[i]);
+        uint8_t *p = reinterpret_cast<uint8_t*>(&r.val);
+        std::copy(p, p + r.shamt, std::back_inserter(dst));
+    }
+}
+
+/*
+ * vlu_decode_loop - decode array
+ */
+static size_t vlu_decode_loop(std::vector<uint64_t> &dst, std::vector<uint8_t> &src)
+{
+    size_t l = src.size();
+    for (size_t i = 0 ; i < l;) {
+        uint64_t d = 0;
+        std::memcpy(&d, &src[i], std::min((size_t)8,l-i));
+        vlu_result r = vlu_decode_56c(d);
+        dst.push_back(r.val);
+        i += r.shamt;
+    }
+}
 
 /*
  * leb_encode_56 - LEB128 encoding up to 56-bits
