@@ -34,17 +34,17 @@
  */
 
 template <typename U>
-static U extract_field(U value, int offset, int width) {
+static U extract_field(U value, size_t offset, size_t width) {
     return (value >> offset) & ((U(1) << width)-1);
 }
 
 template <typename U>
-static U insert_field(U value, int offset, int width) {
+static U insert_field(U value, size_t offset, size_t width) {
     return (value & ((U(1) << width)-1)) << offset;
 }
 
 template <typename U>
-static U replace_field(U orig, U replacement, int offset, int width) {
+static U replace_field(U orig, U replacement, size_t offset, size_t width) {
     return (orig & ~( ((U(1) << width)-1) << offset) ) |
         (replacement & ((U(1) << width)-1)) << offset;
 }
@@ -203,7 +203,7 @@ static uint64_t leb_encode_56(uint64_t num)
     uint64_t orig = num;
     uint64_t leb = 0;
     for (size_t i = 0; i < 8; i++) {
-        int8_t b = extract_field<uint64_t>(num, 0, 7);
+        int8_t b = (int8_t)extract_field<uint64_t>(num, 0, 7);
         num >>= 7;
         b |= (num == 0 ? 0 : 0x80);
         leb |= insert_field<uint64_t>(b, i*8, 8);
@@ -219,7 +219,7 @@ static uint64_t leb_decode_56(uint64_t leb)
 {
     uint64_t num = 0;
     for (size_t i = 0; i < 8; i++) {
-        int8_t b = extract_field<uint64_t>(leb, i*8, 8);
+        int8_t b = (int8_t)extract_field<uint64_t>(leb, i*8, 8);
         num |= insert_field<uint64_t>(b, i*7, 7);
         if (b >= 0) break;
     }
