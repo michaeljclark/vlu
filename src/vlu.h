@@ -146,7 +146,7 @@ static struct vlu_result vlu_decode_56(uint64_t uvlu)
 {
     int t1 = ctz(~uvlu);
     int shamt = t1 + 1;
-    uint64_t num = uvlu >> shamt;
+    uint64_t num = (uvlu >> shamt) & ((1ull << (shamt << 3))-1);
     return (vlu_result) { num, shamt };
 }
 
@@ -183,6 +183,12 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
      *    mov     rax, 0x8
      *    cmovg   rdx, rax
      *    shrx    rax, rdi, rdx
+     *
+     *    shl     rdx, 0x3
+     *    mov     rax, -1
+     *    shlx    rax, rax, rdx
+     *    andn    rax, rdx, rax
+     *    shr     rdx, 0x3
      *    ret     ; struct { rax; rdx; }
      */
     struct vlu_result r;
@@ -193,8 +199,14 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
         "lea     1(%[tmp1]),%[shamt]        \n\t"
         "mov     $0x8, %[tmp1]              \n\t"
         "cmovg   %[tmp1], %[shamt]          \n\t"
-        "shrx    %[shamt], %[vlu], %[val]   "
-        : [val] "=r" (r.val), [shamt] "=r" (r.shamt)
+        "shrx    %[shamt], %[vlu], %[val]   \n\t"
+        /* mask bits */
+        "shl     $3, %[shamt]               \n\t"
+        "mov     $-1, %[tmp1]               \n\t"
+        "shlx    %[shamt], %[tmp1], %[tmp1] \n\t"
+        "andn    %[val], %[tmp1], %[val]    \n\t"
+        "shr     $3, %[shamt]                   "
+        : [val] "=&r" (r.val), [shamt] "=&r" (r.shamt)
         : [vlu] "r" (vlu), [tmp1] "r" (~vlu)
         : "cc"
     );
@@ -205,7 +217,7 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 {
     int t1 = ctz(~vlu);
     int shamt = t1 > 7 ? 8 : t1 + 1;
-    uint64_t num = vlu >> shamt;
+    uint64_t num = (vlu >> shamt) & ((1ull << (shamt << 3))-1);
     return vlu_result{ num, shamt };
 }
 #endif

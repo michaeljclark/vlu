@@ -58,10 +58,8 @@ simple implementation:
 ```
   t1       = 8 - ((clz(num) - 1) / 7)
   shamt    = t1 + 1
-  encoded  = integer << shamt
   if num ≠ 0 then:
-      encoded = encoded
-              | ((1 << (shamt - 1)) - 1)
+      encoded = (integer << shamt) | ((1 << (shamt - 1)) - 1)
 ```
 
 with bit-8 continuations:
@@ -70,10 +68,8 @@ with bit-8 continuations:
   t1       = 8 - ((clz(num) - 1) / 7)
   cont     = t1 > 7
   shamt    = cont ? 8 : t1 + 1
-  encoded  = integer << shamt
   if num ≠ 0 then:
-      encoded = encoded
-              | ((1 << (shamt - 1)) - 1)
+      encoded = (integer << shamt) | ((1 << (shamt - 1)) - 1)
               | (cont ? 0b10000000 : 0)
 ```
 
@@ -84,7 +80,7 @@ simple implementation:
 ```
   t1       = ctz(~encoded)
   shamt    = t1 + 1
-  integer  = encoded >> shamt
+  integer  = (encoded >> shamt) & ((1 << (shamt << 3)) - 1)
 ```
 
 with bit-8 continuations:
@@ -92,7 +88,7 @@ with bit-8 continuations:
 ```
   t1       = ctz(encoded)
   shamt    = t1 > 7 ? 8 : t1 + 1;
-  integer  = encoded >> shamt
+  integer  = (encoded >> shamt) & ((1 << (shamt << 3)) - 1)
 ```
 
 ## Benchmarks
@@ -101,19 +97,19 @@ Benchmarks run on a single-core of an Intel Core i9-7980XE CPU at \~4.0GHz:
 
 |Benchmark                     |Item count|Iterations|Size KiB  |Time µs   |GiB/sec   |
 |------------------------------|----------|----------|----------|----------|----------|
-|BARE                          |1048576   |1000      |8000      |625283    |   12.494 |
-|LEB_56 encode (random)        |1048576   |1000      |8000      |5466135   |    1.429 |
-|LEB_56 decode (random)        |1048576   |1000      |8000      |4413817   |    1.770 |
-|LEB_56 encode (weighted)      |1048576   |1000      |8000      |8049317   |    0.971 |
-|LEB_56 decode (weighted)      |1048576   |1000      |8000      |7409354   |    1.054 |
-|VLU_56 encode (random)        |1048576   |1000      |8000      |2087182   |    3.743 |
-|VLU_56 decode (random)        |1048576   |1000      |8000      |788366    |    9.910 |
-|VLU_56 encode (weighted)      |1048576   |1000      |8000      |2082917   |    3.751 |
-|VLU_56 decode (weighted)      |1048576   |1000      |8000      |796852    |    9.804 |
-|VLU_56C encode (random)       |1048576   |1000      |8000      |2902893   |    2.691 |
-|VLU_56C decode (random)       |1048576   |1000      |8000      |895172    |    8.727 |
-|VLU_56C encode (weighted)     |1048576   |1000      |8000      |2870418   |    2.722 |
-|VLU_56C decode (weighted)     |1048576   |1000      |8000      |902739    |    8.654 |
+|BARE                          |1048576   |1000      |8000      |660807    |   11.823 |
+|LEB_56 encode (random)        |1048576   |1000      |8000      |5595800   |    1.396 |
+|LEB_56 decode (random)        |1048576   |1000      |8000      |4669543   |    1.673 |
+|LEB_56 encode (weighted)      |1048576   |1000      |8000      |7981417   |    0.979 |
+|LEB_56 decode (weighted)      |1048576   |1000      |8000      |7768834   |    1.006 |
+|VLU_56 encode (random)        |1048576   |1000      |8000      |2256650   |    3.462 |
+|VLU_56 decode (random)        |1048576   |1000      |8000      |970068    |    8.054 |
+|VLU_56 encode (weighted)      |1048576   |1000      |8000      |2274486   |    3.435 |
+|VLU_56 decode (weighted)      |1048576   |1000      |8000      |1006372   |    7.763 |
+|VLU_56C encode (random)       |1048576   |1000      |8000      |2946204   |    2.652 |
+|VLU_56C decode (random)       |1048576   |1000      |8000      |1539348   |    5.075 |
+|VLU_56C encode (weighted)     |1048576   |1000      |8000      |2920528   |    2.675 |
+|VLU_56C decode (weighted)     |1048576   |1000      |8000      |1524386   |    5.125 |
 
 _**Note:** 'VLU_56C' denotes the VLU decoder variant that checks for continuations._
 
@@ -138,12 +134,22 @@ This table shows bytes, encoded bits and total bits for VLU8:
 
 ## Example code
 
+Definitions:
+
+```C
+struct vlu_result
+{
+    uint64_t val;
+    int64_t shamt;
+};
+```
+
 ### Encoder (C)
 
 Example 64-bit VLU encoder:
 
 ```C
-uint64_t vlu_encode_56c(uint64_t num)
+struct vlu_result vlu_encode_56c(uint64_t num)
 {
     int lz = __builtin_clzll(num);
     int t1 = 8 - ((lz - 1) / 7);
@@ -152,7 +158,7 @@ uint64_t vlu_encode_56c(uint64_t num)
     uint64_t uvlu = (num << shamt)
         | (((num!=0) << (shamt-1))-(num!=0))
         | (-cont & 0x80);
-    return uvlu;
+    return (vlu_result) { uvlu, shamt };
 }
 ```
 
@@ -161,17 +167,12 @@ uint64_t vlu_encode_56c(uint64_t num)
 Example 64-bit VLU decoder:
 
 ```C
-struct vlu_result
-{
-    uint64_t val;
-    int64_t shamt;
-};
-
 struct vlu_result vlu_decode_56c(uint64_t vlu)
 {
     int t1 = __builtin_ctzll(~vlu);
     int shamt = t1 > 7 ? 8 : t1 + 1;
-    return vlu_result{ vlu >> shamt, shamt };
+    uint64_t num = (vlu >> shamt) & ((1ull << (shamt << 3))-1);
+    return (vlu_result) { num, shamt };
 }
 ```
 
