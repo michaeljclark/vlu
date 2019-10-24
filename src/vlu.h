@@ -107,6 +107,17 @@ static int vlu_size_56(uint64_t num)
 }
 
 /*
+ * vlu_size_56c - VLU8 packet size in bytes
+ */
+static int vlu_size_56c(uint64_t num)
+{
+    int lz = clz(num);
+    int t1 = 8 - ((lz - 1) / 7);
+    bool cont = t1 > 7;
+    return cont ? 8 : t1 + 1;
+}
+
+/*
  * vlu_encode_56 - VLU8 encoding up to 56-bits
  */
 static uint64_t vlu_encode_56(uint64_t num)
