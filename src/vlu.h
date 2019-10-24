@@ -27,6 +27,8 @@
 #include <cstdint>
 #include <cstddef>
 
+#include "bits.h"
+
 /*
  * Bit field macros
  */
@@ -100,7 +102,7 @@ static U replace_field(U orig, U replacement, int offset, int width) {
  */
 static int vlu_size_56(uint64_t num)
 {
-    int lz = __builtin_clzll(num);
+    int lz = clz(num);
     return 9 - ((lz - 1) / 7);
 }
 
@@ -109,7 +111,7 @@ static int vlu_size_56(uint64_t num)
  */
 static uint64_t vlu_encode_56(uint64_t num)
 {
-    int lz = __builtin_clzll(num);
+    int lz = clz(num);
     int t1 = 8 - ((lz - 1) / 7);
     int shamt = t1 + 1;
     uint64_t uvlu = (num << shamt)
@@ -122,7 +124,7 @@ static uint64_t vlu_encode_56(uint64_t num)
  */
 static uint64_t vlu_decode_56(uint64_t uvlu)
 {
-    int t1 = __builtin_ctzll(~uvlu);
+    int t1 = ctz(~uvlu);
     int shamt = t1 + 1;
     uint64_t num = uvlu >> shamt;
     return num;
@@ -133,7 +135,7 @@ static uint64_t vlu_decode_56(uint64_t uvlu)
  */
 static uint64_t vlu_encode_56c(uint64_t num)
 {
-    int lz = __builtin_clzll(num);
+    int lz = clz(num);
     int t1 = 8 - ((lz - 1) / 7);
     bool cont = t1 > 7;
     int shamt = cont ? 8 : t1 + 1;
@@ -187,7 +189,7 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 #else
 static vlu_result vlu_decode_56c(uint64_t vlu)
 {
-    int t1 = __builtin_ctzll(~vlu);
+    int t1 = ctz(~vlu);
     int shamt = t1 > 7 ? 8 : t1 + 1;
     return vlu_result{ vlu >> shamt, shamt };
 }
