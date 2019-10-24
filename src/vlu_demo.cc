@@ -58,7 +58,7 @@ static void print_binary(const char* name, size_t aux, uint64_t val)
 
 static void print_one_uvlu(uint64_t val)
 {
-    uint64_t vlu = vlu_encode_56c(val);
+    uint64_t vlu = vlu_encode_56c(val).val;
     uint64_t num = vlu_decode_56c(vlu).val;
     size_t sz = vlu_size_56(val);
 

@@ -97,6 +97,12 @@ static U replace_field(U orig, U replacement, size_t offset, size_t width) {
  *
  */
 
+struct vlu_result
+{
+    uint64_t val;
+    int64_t shamt;
+};
+
 /*
  * vlu_size_56 - VLU8 packet size in bytes
  */
@@ -120,31 +126,31 @@ static int vlu_size_56c(uint64_t num)
 /*
  * vlu_encode_56 - VLU8 encoding up to 56-bits
  */
-static uint64_t vlu_encode_56(uint64_t num)
+static struct vlu_result vlu_encode_56(uint64_t num)
 {
     int lz = clz(num);
     int t1 = 8 - ((lz - 1) / 7);
     int shamt = t1 + 1;
     uint64_t uvlu = (num << shamt)
         | (((num!=0) << (shamt-1))-(num!=0));
-    return uvlu;
+    return (vlu_result) { uvlu, shamt };
 }
 
 /*
  * vlu_decode_56 - VLU8 decoding up to 56-bits
  */
-static uint64_t vlu_decode_56(uint64_t uvlu)
+static struct vlu_result vlu_decode_56(uint64_t uvlu)
 {
     int t1 = ctz(~uvlu);
     int shamt = t1 + 1;
     uint64_t num = uvlu >> shamt;
-    return num;
+    return (vlu_result) { num, shamt };
 }
 
 /*
  * vlu_encode_56c - VLU8 encoding with continuation support
  */
-static uint64_t vlu_encode_56c(uint64_t num)
+static struct vlu_result vlu_encode_56c(uint64_t num)
 {
     int lz = clz(num);
     int t1 = 8 - ((lz - 1) / 7);
@@ -153,18 +159,12 @@ static uint64_t vlu_encode_56c(uint64_t num)
     uint64_t uvlu = (num << shamt)
         | (((num!=0) << (shamt-1))-(num!=0))
         | (-(int)cont & 0x80);
-    return uvlu;
+    return (vlu_result) { uvlu, shamt };
 }
 
 /*
  * vlu_decode_56c - VLU8 decoding with continuation support
  */
-
-struct vlu_result
-{
-    uint64_t val;
-    int64_t shamt;
-};
 
 #if defined (__GNUC__) && defined(__x86_64__)
 static vlu_result vlu_decode_56c(uint64_t vlu)
@@ -202,7 +202,8 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 {
     int t1 = ctz(~vlu);
     int shamt = t1 > 7 ? 8 : t1 + 1;
-    return vlu_result{ vlu >> shamt, shamt };
+    uint64_t num = vlu >> shamt;
+    return vlu_result{ num, shamt };
 }
 #endif
 
