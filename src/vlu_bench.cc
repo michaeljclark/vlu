@@ -180,13 +180,11 @@ static void print_header()
 static void print_data(bench_context &ctx, size_t total_data_size,
                        size_t runtime_us, double throughput_gbsec)
 {
-   printf("|%-30s|%-10lu|%-10lu|%-10lu|%-10lu|%9.3lf |\n",
-            ctx.name.c_str(),
-            ctx.item_count,
-            ctx.iterations,
-            total_data_size,
-            runtime_us,
-            throughput_gbsec);
+#define _NUM_ "%-10" PRIu64
+    printf("|%-30s|" _NUM_ "|" _NUM_ "|" _NUM_ "|" _NUM_ "|%9.3lf |\n",
+        ctx.name.c_str(), ctx.item_count, ctx.iterations,
+        total_data_size, runtime_us, throughput_gbsec);
+#undef _NUM_
 }
 
 /*
