@@ -141,7 +141,7 @@ static uint64_t vlu_encode_56c(uint64_t num)
     int shamt = cont ? 8 : t1 + 1;
     uint64_t uvlu = (num << shamt)
         | (((num!=0) << (shamt-1))-(num!=0))
-        | (-cont & 0x80);
+        | (-(int)cont & 0x80);
     return uvlu;
 }
 
