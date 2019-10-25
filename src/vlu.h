@@ -223,9 +223,9 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 static vlu_result vlu_decode_56c(uint64_t vlu)
 {
     int t1 = ctz(~vlu);
-    bool cond = t1 > 7;
-    int shamt = cond ? 8 : t1 + 1;
-    uint64_t mask = ~(-!cond << (shamt << 3));
+    bool cont = t1 > 7;
+    int shamt = cont ? 8 : t1 + 1;
+    uint64_t mask = ~(-!cont << (shamt << 3));
     uint64_t num = (vlu >> shamt) & mask;
     return vlu_result{ num, shamt };
 }
