@@ -58,12 +58,13 @@ struct bench_context
 {
     const std::string name;
     const size_t item_count;
+    const size_t runs;
     const size_t iterations;
 
     std::vector<uint64_t> in;
     std::vector<uint64_t> out;
     bench_random random;
 
-    bench_context(std::string name, const size_t item_count, const size_t iterations) :
-        name(name), item_count(item_count), iterations(iterations) {}
+    bench_context(std::string name, size_t item_count, size_t runs, size_t iterations) :
+        name(name), item_count(item_count), runs(runs), iterations(iterations) {}
 };

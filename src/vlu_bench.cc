@@ -192,21 +192,26 @@ static void print_data(bench_context &ctx, size_t total_data_size,
  */
 
 template <typename C, typename F>
-static void bench_exec(C ctx, F setup, F bench)
+static int bench_exec(C &&ctx, F setup, F bench)
 {
     setup(ctx);
 
-    const auto t1 = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < ctx.iterations; i++) bench(ctx);
-    const auto t2 = std::chrono::high_resolution_clock::now();
+    for (size_t j = 0; j < ctx.runs; j++) {
 
-    size_t total_data_size = ctx.item_count * ctx.iterations * sizeof(uint64_t);
-    auto runtime_us = std::chrono::duration_cast
-        <std::chrono::microseconds>(t2 - t1).count();
-    double throughput_gbsec = (double)(total_data_size /
-        (double)(1<<30)) / ((double)runtime_us / 1e6);
+        const auto t1 = std::chrono::high_resolution_clock::now();
+        for (size_t i = 0; i < ctx.iterations; i++) bench(ctx);
+        const auto t2 = std::chrono::high_resolution_clock::now();
 
-    print_data(ctx, total_data_size/(1<<20), runtime_us, throughput_gbsec);
+        size_t total_data_size = ctx.item_count * ctx.iterations * sizeof(uint64_t);
+        auto runtime_us = std::chrono::duration_cast
+            <std::chrono::microseconds>(t2 - t1).count();
+        double throughput_gbsec = (double)(total_data_size /
+            (double)(1<<30)) / ((double)runtime_us / 1e6);
+
+        print_data(ctx, total_data_size/(1<<20), runtime_us, throughput_gbsec);
+    }
+
+    return 0;
 }
 
 /*
@@ -214,36 +219,37 @@ static void bench_exec(C ctx, F setup, F bench)
  */
 
 template<typename C>
-void run_benchmarks(size_t item_count, size_t iterations)
+int run_benchmark(size_t item_count, size_t benchmark, size_t runs, size_t iterations)
 {
-    bench_exec(C("BARE",                  item_count, iterations), setup_random,        bench_nop        );
-    bench_exec(C("LEB_56 encode (random)",   item_count, iterations), setup_random,        bench_leb_encode_56);
-    bench_exec(C("LEB_56 decode (random)",   item_count, iterations), setup_random_uleb,   bench_leb_decode_56);
-    bench_exec(C("LEB_56 encode (weighted)", item_count, iterations), setup_weighted,      bench_leb_encode_56);
-    bench_exec(C("LEB_56 decode (weighted)", item_count, iterations), setup_weighted_uleb, bench_leb_decode_56);
-    bench_exec(C("VLU_56 encode (random)",   item_count, iterations), setup_random,        bench_vlu_encode_56);
-    bench_exec(C("VLU_56 decode (random)",   item_count, iterations), setup_random_uvlu,   bench_vlu_decode_56);
-    bench_exec(C("VLU_56 encode (weighted)", item_count, iterations), setup_weighted,      bench_vlu_encode_56);
-    bench_exec(C("VLU_56 decode (weighted)", item_count, iterations), setup_weighted_uvlu, bench_vlu_decode_56);
-    bench_exec(C("VLU_56C encode (random)",   item_count, iterations), setup_random,        bench_vlu_encode_56c);
-    bench_exec(C("VLU_56C decode (random)",   item_count, iterations), setup_random_uvlu,   bench_vlu_decode_56c);
-    bench_exec(C("VLU_56C encode (weighted)", item_count, iterations), setup_weighted,      bench_vlu_encode_56c);
-    bench_exec(C("VLU_56C decode (weighted)", item_count, iterations), setup_weighted_uvlu, bench_vlu_decode_56c);
+    switch (benchmark) {
+    case 0: return bench_exec(C("BARE",                  item_count, runs, iterations), setup_random,        bench_nop        );
+    case 1: return bench_exec(C("LEB_56 encode (random)",   item_count, runs, iterations), setup_random,        bench_leb_encode_56);
+    case 2: return bench_exec(C("LEB_56 encode (weighted)", item_count, runs, iterations), setup_weighted,      bench_leb_encode_56);
+    case 3: return bench_exec(C("LEB_56 decode (random)",   item_count, runs, iterations), setup_random_uleb,   bench_leb_decode_56);
+    case 4: return bench_exec(C("LEB_56 decode (weighted)", item_count, runs, iterations), setup_weighted_uleb, bench_leb_decode_56);
+    case 5: return bench_exec(C("VLU_56 encode (random)",   item_count, runs, iterations), setup_random,        bench_vlu_encode_56);
+    case 6: return bench_exec(C("VLU_56 encode (weighted)", item_count, runs, iterations), setup_weighted,      bench_vlu_encode_56);
+    case 7: return bench_exec(C("VLU_56 decode (random)",   item_count, runs, iterations), setup_random_uvlu,   bench_vlu_decode_56);
+    case 8: return bench_exec(C("VLU_56 decode (weighted)", item_count, runs, iterations), setup_weighted_uvlu, bench_vlu_decode_56);
+    case 9: return bench_exec(C("VLU_56C encode (random)",   item_count, runs, iterations), setup_random,        bench_vlu_encode_56c);
+    case 10: return bench_exec(C("VLU_56C encode (weighted)", item_count, runs, iterations), setup_weighted,      bench_vlu_encode_56c);
+    case 11: return bench_exec(C("VLU_56C decode (random)",   item_count, runs, iterations), setup_random_uvlu,   bench_vlu_decode_56c);
+    case 12: return bench_exec(C("VLU_56C decode (weighted)", item_count, runs, iterations), setup_weighted_uvlu, bench_vlu_decode_56c);
+    }
+
+    return 0;
 }
 
 int main(int argc, char **argv)
 {
-    size_t iterations = 0;
-
-    if (argc == 2) {
-        iterations = atoi(argv[1]);
+    if (argc == 2 && strcmp(argv[1], "print_header") == 0) {
+        print_header();
+    } else if (argc == 4) {
+        run_benchmark<bench_context>(1<<20, atoi(argv[1]), atoi(argv[2]), atoi(argv[3]));
     } else {
-        fprintf(stderr, "usage: %s <iterations>\n", argv[0]);
+        fprintf(stderr, "usage: %s <benchmark> <runs> <iterations>\n", argv[0]);
         exit(1);
     }
-
-    print_header();
-    run_benchmarks<bench_context>(1<<20, iterations);
 
     return 0;
 }
