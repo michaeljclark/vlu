@@ -69,8 +69,7 @@ with bit-8 continuations:
   cont     = t1 > 7
   shamt    = cont ? 8 : t1 + 1
   if num ≠ 0 then:
-      encoded = (integer << shamt) | ((1 << (shamt - 1)) - 1)
-              | (cont << 8)
+      encoded = (integer << shamt) | ((1 << (shamt - 1)) - 1) | (cont << 8)
 ```
 
 ### Decoder pseudo-code
@@ -87,7 +86,8 @@ with bit-8 continuations:
 
 ```
   t1       = ctz(encoded)
-  shamt    = t1 > 7 ? 8 : t1 + 1;
+  cont     = t1 > 7
+  shamt    = cont ? 8 : t1 + 1
   integer  = (encoded >> shamt) & ((1 << (shamt << 3)) - 1)
 ```
 
