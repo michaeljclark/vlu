@@ -70,7 +70,7 @@ with bit-8 continuations:
   shamt    = cont ? 8 : t1 + 1
   if num ≠ 0 then:
       encoded = (integer << shamt) | ((1 << (shamt - 1)) - 1)
-              | (cont ? 0b10000000 : 0)
+              | (cont << 8)
 ```
 
 ### Decoder pseudo-code
