@@ -203,7 +203,7 @@ simply shifts the 64-bit word by the number of bits in the unary code._
 #### Variant 2
 
 8 instructions to decode 64-bit VLU packet on x86_64 Haswell with BMI2
-**with continuation support** _(unlimited)_:
+**continuation support** _(unlimited)_:
 
 ```asm
 vlu_decode_56c:
@@ -222,6 +222,33 @@ vlu_decode_56c:
 structure return ABI. The schedule of `CMP` and `CMOVG` has been
 carefully selected, along with the choice of `LEA` to compose the byte
 count, so that the condition code register is undisturbed._
+
+#### Variant 3
+
+14 instructions to decode 64-bit VLU packet on x86_64 Haswell with BMI2
+**continuations and subword masking**:
+
+```asm
+vlu_decode_56c:
+        mov     rcx, rdi
+        not     rcx
+        tzcnt   rcx, rcx
+        xor     rsi, rsi
+        cmp     rcx, 7
+        setne   sil
+        lea     rdx, [rcx + 1]
+        mov     rcx, 8
+        cmovg   rdx, rcx
+        shrx    rax, rdi, rdx
+        lea     rcx, [rdx * 8]
+        neg     rsi
+        shlx    rsi, rsi, rcx
+        andn    rax, rsi, rax
+        ret
+```
+
+**Note:** _The unary count is returned in `rdx`, to map to the _x86_64_
+structure return ABI._
 
 #### Comparison with LEB
 
