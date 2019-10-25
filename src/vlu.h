@@ -145,8 +145,9 @@ static struct vlu_result vlu_encode_56(uint64_t num)
 static struct vlu_result vlu_decode_56(uint64_t uvlu)
 {
     int t1 = ctz(~uvlu);
-    int shamt = t1 + 1;
-    uint64_t mask = ~(-(long long)(shamt != 8) << (shamt << 3));
+    bool cond = t1 > 7;
+    int shamt = cond ? 8 : t1 + 1;
+    uint64_t mask = ~(-!cond << (shamt << 3));
     uint64_t num = (uvlu >> shamt) & mask;
     return (vlu_result) { num, shamt };
 }
@@ -222,8 +223,9 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 static vlu_result vlu_decode_56c(uint64_t vlu)
 {
     int t1 = ctz(~vlu);
-    int shamt = t1 > 7 ? 8 : t1 + 1;
-    uint64_t mask = ~(-(long long)(shamt != 8) << (shamt << 3));
+    bool cond = t1 > 7;
+    int shamt = cond ? 8 : t1 + 1;
+    uint64_t mask = ~(-!cond << (shamt << 3));
     uint64_t num = (vlu >> shamt) & mask;
     return vlu_result{ num, shamt };
 }

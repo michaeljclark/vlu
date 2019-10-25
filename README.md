@@ -170,8 +170,9 @@ Example 64-bit VLU decoder:
 struct vlu_result vlu_decode_56c(uint64_t uvlu)
 {
     int t1 = __builtin_ctzll(~uvlu);
-    int shamt = t1 > 7 ? 8 : t1 + 1;
-    uint64_t mask = ~(-(long long)(shamt != 8) << (shamt << 3));
+    bool cond = t1 > 7;
+    int shamt = cond ? 8 : t1 + 1;
+    uint64_t mask = ~(-!cond << (shamt << 3));
     uint64_t num = (uvlu >> shamt) & mask;
     return (vlu_result) { num, shamt };
 }
