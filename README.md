@@ -185,7 +185,7 @@ struct vlu_result vlu_decode_56c(uint64_t uvlu)
 5 instructions to decode 64-bit VLU packet on x86_64 Haswell with BMI2
 **without continuation support** _(limited to 56-bit)_:
 
-```asm
+```
 vlu_decode_56:
         mov     rdx, rdi
         not     rdx
@@ -205,7 +205,7 @@ simply shifts the 64-bit word by the number of bits in the unary code._
 8 instructions to decode 64-bit VLU packet on x86_64 Haswell with BMI2
 **continuation support** _(unlimited)_:
 
-```asm
+```
 vlu_decode_56c:
         mov     rax, rdi
         not     rax
@@ -228,7 +228,7 @@ count, so that the condition code register is undisturbed._
 14 instructions to decode 64-bit VLU packet on x86_64 Haswell with BMI2
 **continuations and subword masking**:
 
-```asm
+```
 vlu_decode_56c:
         mov     rcx, rdi
         not     rcx
@@ -254,7 +254,7 @@ structure return ABI._
 
 Compare to 64-bit LEB packet on x86_64 _(loops up to 8 times per word)_:
 
-```asm
+```
 leb_decode_56:
         xor     eax, eax
         xor     esi, esi
