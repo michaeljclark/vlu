@@ -102,14 +102,14 @@ Benchmarks run on a single-core of an Intel Core i9-7980XE CPU at \~4.0GHz:
 |LEB_56 decode (random)        |1048576   |1000      |8000      |4570407   |    1.709 |
 |LEB_56 encode (weighted)      |1048576   |1000      |8000      |8013996   |    0.975 |
 |LEB_56 decode (weighted)      |1048576   |1000      |8000      |7731451   |    1.010 |
-|VLU_56 encode (random)        |1048576   |1000      |8000      |2280125   |    3.426 |
-|VLU_56 decode (random)        |1048576   |1000      |8000      |981401    |    7.961 |
-|VLU_56 encode (weighted)      |1048576   |1000      |8000      |2128504   |    3.670 |
-|VLU_56 decode (weighted)      |1048576   |1000      |8000      |2189323   |    3.568 |
-|VLU_56C encode (random)       |1048576   |1000      |8000      |2929587   |    2.667 |
-|VLU_56C decode (random)       |1048576   |1000      |8000      |1253314   |    6.233 |
-|VLU_56C encode (weighted)     |1048576   |1000      |8000      |2930526   |    2.666 |
-|VLU_56C decode (weighted)     |1048576   |1000      |8000      |2436569   |    3.206 |
+|VLU_56 encode (random)        |1048576   |1000      |8000      |2212099   |    3.532 |
+|VLU_56 decode (random)        |1048576   |1000      |8000      |1295747   |    6.029 |
+|VLU_56 encode (weighted)      |1048576   |1000      |8000      |2196455   |    3.557 |
+|VLU_56 decode (weighted)      |1048576   |1000      |8000      |1285929   |    6.075 |
+|VLU_56C encode (random)       |1048576   |1000      |8000      |2963704   |    2.636 |
+|VLU_56C decode (random)       |1048576   |1000      |8000      |1407615   |    5.550 |
+|VLU_56C encode (weighted)     |1048576   |1000      |8000      |2924660   |    2.671 |
+|VLU_56C decode (weighted)     |1048576   |1000      |8000      |1417983   |    5.510 |
 
 _**Note:** 'VLU_56C' denotes the VLU decoder variant that checks for continuations._
 
@@ -171,8 +171,8 @@ struct vlu_result vlu_decode_56c(uint64_t uvlu)
 {
     int t1 = __builtin_ctzll(~uvlu);
     int shamt = t1 > 7 ? 8 : t1 + 1;
-    uint64_t num = (uvlu >> shamt);
-    if (shamt < 8) num &= ~(-1ull << (shamt << 3));
+    uint64_t mask = ~(-(long long)(shamt != 8) << (shamt << 3));
+    uint64_t num = (uvlu >> shamt) & mask;
     return (vlu_result) { num, shamt };
 }
 ```

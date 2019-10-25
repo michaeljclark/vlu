@@ -146,8 +146,8 @@ static struct vlu_result vlu_decode_56(uint64_t uvlu)
 {
     int t1 = ctz(~uvlu);
     int shamt = t1 + 1;
-    uint64_t num = (uvlu >> shamt);
-    if (shamt < 8) num &= ~(-1ull << (shamt << 3));
+    uint64_t mask = ~(-(long long)(shamt != 8) << (shamt << 3));
+    uint64_t num = (uvlu >> shamt) & mask;
     return (vlu_result) { num, shamt };
 }
 
@@ -176,42 +176,44 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
     /*
      * Optimized Intel assembly language
      *
-     *    mov     rax, rdi
-     *    not     rax
-     *    tzcnt   rax, rax
-     *    cmp     rax, 0x7
-     *    lea     rdx, [rax + 1]
-     *    mov     rax, 0x8
-     *    cmovg   rdx, rax
+     *    mov     rcx, rdi
+     *    not     rcx
+     *    tzcnt   rcx, rcx
+     *    xor     rsi, rsi
+     *    cmp     rcx, 7
+     *    setne   sil
+     *    lea     rdx, [rcx + 1]
+     *    mov     rcx, 8
+     *    cmovg   rdx, rcx
      *    shrx    rax, rdi, rdx
-     *
-     *    shl     rdx, 0x3
-     *    mov     rax, -1
-     *    shlx    rax, rax, rdx
-     *    andn    rax, rdx, rax
-     *    shr     rdx, 0x3
+     *    lea     rcx, [rdx * 8]
+     *    neg     rsi
+     *    shlx    rsi, rsi, rcx
+     *    andn    rax, rsi, rax
      *    ret     ; struct { rax; rdx; }
      */
     struct vlu_result r;
-    uint64_t tmp1;
+    uint64_t tmp1, tmp2;
     asm volatile (
-        "tzcnt   %[tmp1], %[tmp1]           \n\t"
-        "cmp     $0x7, %[tmp1]              \n\t"
-        "lea     1(%[tmp1]),%[shamt]        \n\t"
-        "mov     $0x8, %[tmp1]              \n\t"
-        "cmovg   %[tmp1], %[shamt]          \n\t"
-        "shrx    %[shamt], %[vlu], %[val]   \n\t"
-        /* mask bits */
-        "cmp     $8, %[shamt]               \n\t"
-        "je      0f                         \n\t"
-        "shl     $3, %[shamt]               \n\t"
-        "mov     $-1, %[tmp1]               \n\t"
-        "shlx    %[shamt], %[tmp1], %[tmp1] \n\t"
-        "andn    %[val], %[tmp1], %[val]    \n\t"
-        "shr     $3, %[shamt]               \n\t"
-        "0: "
-        : [val] "=&r" (r.val), [shamt] "=&r" (r.shamt)
-        : [vlu] "r" (vlu), [tmp1] "r" (~vlu)
+        ".intel_syntax                      \n\t"
+        "mov     %[tmp1], %[vlu]            \n\t"
+        "not     %[tmp1]                    \n\t" /* ~vlu */
+        "tzcnt   %[tmp1], %[tmp1]           \n\t" /* tz = ctz(~vlu) */
+        "xor     %[tmp2], %[tmp2]           \n\t"
+        "cmp     %[tmp1], 7                 \n\t"
+        "setne   %b[tmp2]                   \n\t" /* shamt > 7 */
+        "lea     %[shamt], [%[tmp1] + 1]    \n\t" /* shamt = tz + 1*/
+        "mov     %[tmp1], 8                 \n\t"
+        "cmovg   %[shamt], %[tmp1]          \n\t" /* shamt > 7 ? 8 : shamt */
+        "shrx    %[val], %[vlu], %[shamt]   \n\t" /* r = vlu >> shamt */
+        "lea     %[tmp1], [%[shamt] * 8]    \n\t" /* sh8 = shamt << 3 */
+        "neg     %[tmp2]                    \n\t" /* mk8 = -(shamt > 7) */
+        "shlx    %[tmp2], %[tmp2], %[tmp1]  \n\t" /* mk8 << sh8 */
+        "andn    %[val], %[tmp2], %[val]    \n\t" /* r & ~(mk8 << sh8) */
+        ".att_syntax"
+        : [val] "=&r" (r.val), [shamt] "=&r" (r.shamt),
+          [tmp1] "=&r" (tmp1), [tmp2] "=&r" (tmp2)
+        : [vlu] "r" (vlu)
         : "cc"
     );
     return r;
@@ -221,8 +223,8 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 {
     int t1 = ctz(~vlu);
     int shamt = t1 > 7 ? 8 : t1 + 1;
-    uint64_t num = vlu >> shamt;
-    if (shamt < 8) num &= ~(-1ull << (shamt << 3));
+    uint64_t mask = ~(-(long long)(shamt != 8) << (shamt << 3));
+    uint64_t num = (vlu >> shamt) & mask;
     return vlu_result{ num, shamt };
 }
 #endif
