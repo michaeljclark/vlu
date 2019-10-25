@@ -56,8 +56,7 @@ void test_encode_uvlu()
     assert(vlu_encode_56c(0x00ffffffffffffff).val == 0xffffffffffffff7f);
 
     for (size_t i = 0; i < 100; i++) {
-        /* fixme: mask logic is broken for 56-bit values */
-        uint64_t val = random.next_weighted() & ((1ull<<48)-1ull);
+        uint64_t val = random.next_weighted() & ((1ull<<56)-1ull);
         uint64_t enc = vlu_encode_56c(val).val;
         uint64_t dec = vlu_decode_56c(enc).val;
         /*

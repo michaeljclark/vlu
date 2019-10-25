@@ -97,19 +97,19 @@ Benchmarks run on a single-core of an Intel Core i9-7980XE CPU at \~4.0GHz:
 
 |Benchmark                     |Item count|Iterations|Size KiB  |Time µs   |GiB/sec   |
 |------------------------------|----------|----------|----------|----------|----------|
-|BARE                          |1048576   |1000      |8000      |660807    |   11.823 |
-|LEB_56 encode (random)        |1048576   |1000      |8000      |5595800   |    1.396 |
-|LEB_56 decode (random)        |1048576   |1000      |8000      |4669543   |    1.673 |
-|LEB_56 encode (weighted)      |1048576   |1000      |8000      |7981417   |    0.979 |
-|LEB_56 decode (weighted)      |1048576   |1000      |8000      |7768834   |    1.006 |
-|VLU_56 encode (random)        |1048576   |1000      |8000      |2256650   |    3.462 |
-|VLU_56 decode (random)        |1048576   |1000      |8000      |970068    |    8.054 |
-|VLU_56 encode (weighted)      |1048576   |1000      |8000      |2274486   |    3.435 |
-|VLU_56 decode (weighted)      |1048576   |1000      |8000      |1006372   |    7.763 |
-|VLU_56C encode (random)       |1048576   |1000      |8000      |2946204   |    2.652 |
-|VLU_56C decode (random)       |1048576   |1000      |8000      |1539348   |    5.075 |
-|VLU_56C encode (weighted)     |1048576   |1000      |8000      |2920528   |    2.675 |
-|VLU_56C decode (weighted)     |1048576   |1000      |8000      |1524386   |    5.125 |
+|BARE                          |1048576   |1000      |8000      |655456    |   11.919 |
+|LEB_56 encode (random)        |1048576   |1000      |8000      |5509095   |    1.418 |
+|LEB_56 decode (random)        |1048576   |1000      |8000      |4570407   |    1.709 |
+|LEB_56 encode (weighted)      |1048576   |1000      |8000      |8013996   |    0.975 |
+|LEB_56 decode (weighted)      |1048576   |1000      |8000      |7731451   |    1.010 |
+|VLU_56 encode (random)        |1048576   |1000      |8000      |2280125   |    3.426 |
+|VLU_56 decode (random)        |1048576   |1000      |8000      |981401    |    7.961 |
+|VLU_56 encode (weighted)      |1048576   |1000      |8000      |2128504   |    3.670 |
+|VLU_56 decode (weighted)      |1048576   |1000      |8000      |2189323   |    3.568 |
+|VLU_56C encode (random)       |1048576   |1000      |8000      |2929587   |    2.667 |
+|VLU_56C decode (random)       |1048576   |1000      |8000      |1253314   |    6.233 |
+|VLU_56C encode (weighted)     |1048576   |1000      |8000      |2930526   |    2.666 |
+|VLU_56C decode (weighted)     |1048576   |1000      |8000      |2436569   |    3.206 |
 
 _**Note:** 'VLU_56C' denotes the VLU decoder variant that checks for continuations._
 
@@ -167,11 +167,12 @@ struct vlu_result vlu_encode_56c(uint64_t num)
 Example 64-bit VLU decoder:
 
 ```C
-struct vlu_result vlu_decode_56c(uint64_t vlu)
+struct vlu_result vlu_decode_56c(uint64_t uvlu)
 {
-    int t1 = __builtin_ctzll(~vlu);
+    int t1 = __builtin_ctzll(~uvlu);
     int shamt = t1 > 7 ? 8 : t1 + 1;
-    uint64_t num = (vlu >> shamt) & ((1ull << (shamt << 3))-1);
+    uint64_t num = (uvlu >> shamt);
+    if (shamt < 8) num &= ~(-1ull << (shamt << 3));
     return (vlu_result) { num, shamt };
 }
 ```
