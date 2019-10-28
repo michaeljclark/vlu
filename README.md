@@ -10,7 +10,7 @@ bits, which encodes a count of n-bit quantums. The data bits
 are stored in the remaining bits of the first n-bit quantum
 followed by the number of bits indicated by the unary value.
 
-![vlu](/vlu.png)
+![vlu](/images/vlu.png)
 _Figure 1: VLU - Variable Length Unary Integer Coding_
 
 The algorithm is parameterizable for different word and packet
@@ -95,50 +95,23 @@ with bit-8 continuations:
 
 Benchmarks run on a single-core of an Intel Core i9-7980XE CPU at \~4.0GHz:
 
-|Benchmark                     |Item count|Iterations|Size KiB  |Time µs   |GiB/sec   |
-|------------------------------|----------|----------|----------|----------|----------|
-|BARE                          |1048576   |1000      |8000      |620323    |   12.594 |
-|LEB_56 encode (random)        |1048576   |1000      |8000      |5416526   |    1.442 |
-|LEB_56 encode (weighted)      |1048576   |1000      |8000      |8286757   |    0.943 |
-|LEB_56 decode (random)        |1048576   |1000      |8000      |4451031   |    1.755 |
-|LEB_56 decode (weighted)      |1048576   |1000      |8000      |7840040   |    0.996 |
-|VLU_56 encode (random)        |1048576   |1000      |8000      |1738991   |    4.493 |
-|VLU_56 encode (weighted)      |1048576   |1000      |8000      |1736263   |    4.500 |
-|VLU_56 decode (random)        |1048576   |1000      |8000      |1249722   |    6.251 |
-|VLU_56 decode (weighted)      |1048576   |1000      |8000      |1256828   |    6.216 |
-|VLU_56C encode (random)       |1048576   |1000      |8000      |2360276   |    3.310 |
-|VLU_56C encode (weighted)     |1048576   |1000      |8000      |2358465   |    3.313 |
-|VLU_56C decode (random)       |1048576   |1000      |8000      |1119887   |    6.976 |
-|VLU_56C decode (weighted)     |1048576   |1000      |8000      |1123964   |    6.951 |
-|snprintf/10 encode (random)   |1048576   |1000      |8000      |61828921  |    0.126 |
-|snprintf/10 encode (weighted) |1048576   |1000      |8000      |60569380  |    0.129 |
-|strtoull/10 decode (random)   |1048576   |1000      |8000      |24581583  |    0.318 |
-|strtoull/10 decode (weighted) |1048576   |1000      |8000      |22279924  |    0.351 |
-|snprintf/16 encode (random)   |1048576   |1000      |8000      |54717451  |    0.143 |
-|snprintf/16 encode (weighted) |1048576   |1000      |8000      |53573354  |    0.146 |
-|strtoull/16 decode (random)   |1048576   |1000      |8000      |60767518  |    0.129 |
-|strtoull/16 decode (weighted) |1048576   |1000      |8000      |36085058  |    0.217 |
+![vlu-benchmarks](/images/benchmarks.png)
+_Figure 2: VLU8 Benchmarks (GiB/sec)_
 
-_**Note:** 'VLU_56C' denotes the VLU decoder variant that checks for continuations._
+### Performance Data
 
-## Statistics
+|Benchmark     |random-encode (GiB/sec) |weighted-encode (GiB/sec) |random-decode (GiB/sec) |weighted-decode (GiB/sec) |
+|:-------------|-------------:|---------------:|-------------:|---------------:|
+|VLU-56        |4.493         |4.500           |6.251         |6.216           |
+|VLU-56C       |3.310         |3.313           |6.976         |6.951           |
+|LEB-56        |1.442         |0.943           |1.755         |0.996           |
+|snprintf-10   |0.126         |0.129           |0.318         |0.351           |
+|snprintf-16   |0.143         |0.146           |0.129         |0.217           |
 
-This table shows bytes, encoded bits and total bits for VLU8:
+#### Benchmark Notes
 
-| Bytes | Payload Bits |   Total Bits |
-|-------|--------------|--------------|
-|     1 |            7 |            8 |
-|     2 |           14 |           16 |
-|     3 |           21 |           24 |
-|     4 |           28 |           32 |
-|     5 |           35 |           40 |
-|     6 |           42 |           48 |
-|     7 |           49 |           56 |
-|     8 |           56 |           64 |
-|     9 |           63 |           72 |
-|    10 |           70 |           80 |
-|    ,, |           ,, |           ,, |
-|     n |          n*7 |          n*8 |
+- `VLU-56C` denotes the VLU decoder variant that checks for continuations.
+- `snprintf` denotes `strtoull` and `snprintf` for ASCII decimal or hexidecimal.
 
 ## Example code
 
