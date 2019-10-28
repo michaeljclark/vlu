@@ -232,9 +232,9 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 #endif
 
 /*
- * vlu_encode_loop - encode array
+ * vlu_encode_vec - encode array
  */
-static void vlu_encode_loop(std::vector<uint8_t> &dst, std::vector<uint64_t> &src)
+static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src)
 {
     size_t l = src.size();
     for (size_t i = 0 ; i < l; i++) {
@@ -247,9 +247,9 @@ static void vlu_encode_loop(std::vector<uint8_t> &dst, std::vector<uint64_t> &sr
 }
 
 /*
- * vlu_decode_loop - decode array
+ * vlu_decode_vec - decode array
  */
-static void vlu_decode_loop(std::vector<uint64_t> &dst, std::vector<uint8_t> &src)
+static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src)
 {
     size_t l = src.size();
     for (size_t i = 0 ; i < l;) {
