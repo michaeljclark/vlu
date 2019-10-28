@@ -106,10 +106,18 @@ Benchmarks run on a single-core of an Intel Core i9-7980XE CPU at \~4.0GHz:
 |VLU_56 encode (weighted)      |1048576   |1000      |8000      |1736263   |    4.500 |
 |VLU_56 decode (random)        |1048576   |1000      |8000      |1249722   |    6.251 |
 |VLU_56 decode (weighted)      |1048576   |1000      |8000      |1256828   |    6.216 |
-|VLU_56C encode (random)       |1048576   |1000      |8000      |2418399   |    3.230 |
-|VLU_56C encode (weighted)     |1048576   |1000      |8000      |2449142   |    3.190 |
-|VLU_56C decode (random)       |1048576   |1000      |8000      |1135796   |    6.878 |
-|VLU_56C decode (weighted)     |1048576   |1000      |8000      |1132483   |    6.899 |
+|VLU_56C encode (random)       |1048576   |1000      |8000      |2360276   |    3.310 |
+|VLU_56C encode (weighted)     |1048576   |1000      |8000      |2358465   |    3.313 |
+|VLU_56C decode (random)       |1048576   |1000      |8000      |1119887   |    6.976 |
+|VLU_56C decode (weighted)     |1048576   |1000      |8000      |1123964   |    6.951 |
+|snprintf/10 encode (random)   |1048576   |1000      |8000      |61828921  |    0.126 |
+|snprintf/10 encode (weighted) |1048576   |1000      |8000      |60569380  |    0.129 |
+|strtoull/10 decode (random)   |1048576   |1000      |8000      |24581583  |    0.318 |
+|strtoull/10 decode (weighted) |1048576   |1000      |8000      |22279924  |    0.351 |
+|snprintf/16 encode (random)   |1048576   |1000      |8000      |54717451  |    0.143 |
+|snprintf/16 encode (weighted) |1048576   |1000      |8000      |53573354  |    0.146 |
+|strtoull/16 decode (random)   |1048576   |1000      |8000      |60767518  |    0.129 |
+|strtoull/16 decode (weighted) |1048576   |1000      |8000      |36085058  |    0.217 |
 
 _**Note:** 'VLU_56C' denotes the VLU decoder variant that checks for continuations._
 
