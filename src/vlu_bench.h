@@ -64,6 +64,7 @@ struct bench_context
     std::vector<uint64_t> in;
     std::vector<uint64_t> out;
     std::vector<std::unique_ptr<char>> strbuf;
+    std::vector<uint8_t> vbuf;
     bench_random random;
 
     bench_context(std::string name, size_t item_count, size_t runs, size_t iterations) :
