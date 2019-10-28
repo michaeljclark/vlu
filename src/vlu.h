@@ -240,7 +240,9 @@ static void vlu_encode_loop(std::vector<uint8_t> &dst, std::vector<uint64_t> &sr
     for (size_t i = 0 ; i < l; i++) {
         vlu_result r = vlu_encode_56c(src[i]);
         uint8_t *p = reinterpret_cast<uint8_t*>(&r.val);
-        std::copy(p, p + r.shamt, std::back_inserter(dst));
+        size_t o = dst.size();
+        dst.resize(o + r.shamt);
+        std::memcpy(&dst[o], p, r.shamt);
     }
 }
 
