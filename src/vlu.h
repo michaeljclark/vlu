@@ -237,12 +237,12 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src)
 {
     size_t l = src.size();
+    dst.reserve(l*4);
     for (size_t i = 0 ; i < l; i++) {
         vlu_result r = vlu_encode_56c(src[i]);
-        uint8_t *p = reinterpret_cast<uint8_t*>(&r.val);
         size_t o = dst.size();
         dst.resize(o + r.shamt);
-        std::memcpy(&dst[o], p, r.shamt);
+        std::memcpy(&dst[o], &r.val, r.shamt);
     }
 }
 
@@ -252,9 +252,11 @@ static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src
 static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src)
 {
     size_t l = src.size();
+    dst.reserve(l/4);
     for (size_t i = 0 ; i < l;) {
         uint64_t d = 0;
-        std::memcpy(&d, &src[i], std::min((size_t)8,l-i));
+        size_t s = std::min((size_t)8,l-i);
+        std::memcpy(&d, &src[i], s);
         vlu_result r = vlu_decode_56c(d);
         dst.push_back(r.val);
         i += r.shamt;
