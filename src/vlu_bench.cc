@@ -54,132 +54,78 @@ static std::unique_ptr<char> make_string(uint64_t val, const char* fmt)
 
 
 /*
+ * random number functions
+ */
+
+static uint64_t random_8(bench_context &ctx) { return ctx.random.pure_8(); }
+static uint64_t random_56(bench_context &ctx) { return ctx.random.pure_56(); }
+static uint64_t random_mix(bench_context &ctx) { return ctx.random.mix_56(); }
+
+
+/*
  * benchmark setup
  */
 
-static void setup_random(bench_context &ctx)
+static void setup_dfl(bench_context &ctx, uint64_t(*rnd)(bench_context&))
 {
     ctx.in.resize(ctx.item_count);
     ctx.out.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = ctx.random.next_pure();
+        ctx.in[i] = rnd(ctx);
     }
 }
 
-static void setup_weighted(bench_context &ctx)
+static void setup_uvlu(bench_context &ctx, uint64_t(*rnd)(bench_context&))
 {
     ctx.in.resize(ctx.item_count);
     ctx.out.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = ctx.random.next_weighted();
+        ctx.in[i] = vlu_encode_56c(rnd(ctx)).val;
     }
 }
 
-static void setup_random_uvlu(bench_context &ctx)
+static void setup_uleb(bench_context &ctx, uint64_t(*rnd)(bench_context&))
 {
     ctx.in.resize(ctx.item_count);
     ctx.out.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = vlu_encode_56c(ctx.random.next_pure()).val;
+        ctx.in[i] = leb_encode_56(rnd(ctx));
     }
 }
 
-static void setup_weighted_uvlu(bench_context &ctx)
-{
-    ctx.in.resize(ctx.item_count);
-    ctx.out.resize(ctx.item_count);
-    for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = vlu_encode_56c(ctx.random.next_weighted()).val;
-    }
-}
-
-static void setup_random_uleb(bench_context &ctx)
-{
-    ctx.in.resize(ctx.item_count);
-    ctx.out.resize(ctx.item_count);
-    for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = leb_encode_56(ctx.random.next_pure());
-    }
-}
-
-static void setup_weighted_uleb(bench_context &ctx)
-{
-    ctx.in.resize(ctx.item_count);
-    ctx.out.resize(ctx.item_count);
-    for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = leb_encode_56(ctx.random.next_weighted());
-    }
-}
-
-static void setup_random_str(bench_context &ctx)
+static void setup_str(bench_context &ctx, uint64_t(*rnd)(bench_context&))
 {
     ctx.in.resize(ctx.item_count);
     ctx.strbuf.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = ctx.random.next_pure();
+        ctx.in[i] = rnd(ctx);
         ctx.strbuf[i] = std::unique_ptr<char>(new char [32]);
     }
 }
 
-static void setup_weighted_str(bench_context &ctx)
-{
-    ctx.in.resize(ctx.item_count);
-    ctx.strbuf.resize(ctx.item_count);
-    for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = ctx.random.next_weighted();
-        ctx.strbuf[i] = std::unique_ptr<char>(new char [32]);
-    }
-}
-
-static void setup_random_dec(bench_context &ctx)
+static void setup_dec(bench_context &ctx, uint64_t(*rnd)(bench_context&))
 {
     ctx.strbuf.resize(ctx.item_count);
     ctx.out.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.strbuf[i] = make_string(ctx.random.next_pure(), "%lld");
+        ctx.strbuf[i] = make_string(rnd(ctx), "%lld");
     }
 }
 
-static void setup_weighted_dec(bench_context &ctx)
+static void setup_hex(bench_context &ctx, uint64_t(*rnd)(bench_context&))
 {
     ctx.strbuf.resize(ctx.item_count);
     ctx.out.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.strbuf[i] = make_string(ctx.random.next_weighted(), "%lld");
+        ctx.strbuf[i] = make_string(rnd(ctx), "%llx");
     }
 }
 
-static void setup_random_hex(bench_context &ctx)
-{
-    ctx.strbuf.resize(ctx.item_count);
-    ctx.out.resize(ctx.item_count);
-    for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.strbuf[i] = make_string(ctx.random.next_pure(), "%llx");
-    }
-}
-
-static void setup_weighted_hex(bench_context &ctx)
-{
-    ctx.strbuf.resize(ctx.item_count);
-    ctx.out.resize(ctx.item_count);
-    for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.strbuf[i] = make_string(ctx.random.next_weighted(), "%llx");
-    }
-}
-static void setup_random_vec(bench_context &ctx)
+static void setup_vec(bench_context &ctx, uint64_t(*rnd)(bench_context&))
 {
     ctx.in.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = ctx.random.next_pure();
-    }
-    vlu_encode_vec(ctx.vbuf, ctx.in);
-}
-
-static void setup_weighted_vec(bench_context &ctx)
-{
-    ctx.in.resize(ctx.item_count);
-    for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = ctx.random.next_weighted();
+        ctx.in[i] = rnd(ctx);
     }
     vlu_encode_vec(ctx.vbuf, ctx.in);
 }
@@ -275,7 +221,7 @@ struct bench_mem_field {
 
 static const bench_mem_field bench_mem_fields[] = {
     /* name */            /* fmt    width */
-    { "Benchmark",           "%-20s",   30 },
+    { "Benchmark",           "%-32s",   32 },
     { "Item count",          "%-10u",   10 },
     { "Iterations",          "%-10u",   10 },
     { "Size KiB",            "%-10u",   10 },
@@ -297,7 +243,7 @@ static void print_data(bench_context &ctx, size_t total_data_size,
                        size_t runtime_us, double throughput_gbsec)
 {
 #define _NUM_ "%-10" PRIu64
-    printf("|%-30s|" _NUM_ "|" _NUM_ "|" _NUM_ "|" _NUM_ "|%9.3lf |\n",
+    printf("|%-32s|" _NUM_ "|" _NUM_ "|" _NUM_ "|" _NUM_ "|%9.3lf |\n",
         ctx.name.c_str(), ctx.item_count, ctx.iterations,
         total_data_size, runtime_us, throughput_gbsec);
 #undef _NUM_
@@ -307,10 +253,10 @@ static void print_data(bench_context &ctx, size_t total_data_size,
  * benchmark timing and execution
  */
 
-template <typename C, typename F>
-static int bench_exec(C &&ctx, F setup, F bench)
+template <typename C, typename S, typename R, typename B>
+static int bench_exec(C &&ctx, S setup, R random, B bench)
 {
-    setup(ctx);
+    setup(ctx, random);
 
     for (size_t j = 0; j < ctx.runs; j++) {
 
@@ -338,27 +284,37 @@ template<typename C>
 int run_benchmark(size_t item_count, size_t benchmark, size_t runs, size_t iterations)
 {
     switch (benchmark) {
-    case 0:  return bench_exec(C("BARE",                          item_count, runs, iterations), setup_random,        bench_nop        );
-    case 1:  return bench_exec(C("LEB_56-raw encode (random)",    item_count, runs, iterations), setup_random,        bench_leb_encode_56);
-    case 2:  return bench_exec(C("LEB_56-raw encode (weighted)",  item_count, runs, iterations), setup_weighted,      bench_leb_encode_56);
-    case 3:  return bench_exec(C("LEB_56-raw decode (random)",    item_count, runs, iterations), setup_random_uleb,   bench_leb_decode_56);
-    case 4:  return bench_exec(C("LEB_56-raw decode (weighted)",  item_count, runs, iterations), setup_weighted_uleb, bench_leb_decode_56);
-    case 5:  return bench_exec(C("VLU_56-raw encode (random)",    item_count, runs, iterations), setup_random,        bench_vlu_encode_56c);
-    case 6:  return bench_exec(C("VLU_56-raw encode (weighted)",  item_count, runs, iterations), setup_weighted,      bench_vlu_encode_56c);
-    case 7:  return bench_exec(C("VLU_56-raw decode (random)",    item_count, runs, iterations), setup_random_uvlu,   bench_vlu_decode_56c);
-    case 8:  return bench_exec(C("VLU_50-raw decode (weighted)",  item_count, runs, iterations), setup_weighted_uvlu, bench_vlu_decode_56c);
-    case 9:  return bench_exec(C("VLU_56-pack encode (random)",   item_count, runs, iterations), setup_random,        bench_vlu_encode_vec);
-    case 10: return bench_exec(C("VLU_56-pack encode (weighted)", item_count, runs, iterations), setup_weighted,      bench_vlu_encode_vec);
-    case 11: return bench_exec(C("VLU_56-pack decode (random)",   item_count, runs, iterations), setup_random_vec,    bench_vlu_decode_vec);
-    case 12: return bench_exec(C("VLU_56-pack decode (weighted)", item_count, runs, iterations), setup_weighted_vec,  bench_vlu_decode_vec);
-    case 13: return bench_exec(C("snprintf/10 encode (random)",   item_count, runs, iterations), setup_random_str,    bench_snprintf_dec_encode_56);
-    case 14: return bench_exec(C("snprintf/10 encode (weighted)", item_count, runs, iterations), setup_weighted_str,  bench_snprintf_dec_encode_56);
-    case 15: return bench_exec(C("strtoull/10 decode (random)",   item_count, runs, iterations), setup_random_dec,    bench_strtoull_dec_decode_56);
-    case 16: return bench_exec(C("strtoull/10 decode (weighted)", item_count, runs, iterations), setup_weighted_dec,  bench_strtoull_dec_decode_56);
-    case 17: return bench_exec(C("snprintf/16 encode (random)",   item_count, runs, iterations), setup_random_str,    bench_snprintf_hex_encode_56);
-    case 18: return bench_exec(C("snprintf/16 encode (weighted)", item_count, runs, iterations), setup_weighted_str,  bench_snprintf_hex_encode_56);
-    case 19: return bench_exec(C("strtoull/16 decode (random)",   item_count, runs, iterations), setup_random_hex,    bench_strtoull_hex_decode_56);
-    case 20: return bench_exec(C("strtoull/16 decode (weighted)", item_count, runs, iterations), setup_weighted_hex,  bench_strtoull_hex_decode_56);
+    case 0:  return bench_exec(C("BARE",                            item_count, runs, iterations), setup_dfl,  random_56,  bench_nop        );
+    case 1:  return bench_exec(C("LEB_56-raw encode (random-8)",    item_count, runs, iterations), setup_dfl,  random_8,   bench_leb_encode_56);
+    case 2:  return bench_exec(C("LEB_56-raw encode (random-56)",   item_count, runs, iterations), setup_dfl,  random_56,  bench_leb_encode_56);
+    case 3:  return bench_exec(C("LEB_56-raw encode (random-mix)",  item_count, runs, iterations), setup_dfl,  random_mix, bench_leb_encode_56);
+    case 4:  return bench_exec(C("LEB_56-raw decode (random-8)",    item_count, runs, iterations), setup_uleb, random_8,   bench_leb_decode_56);
+    case 5:  return bench_exec(C("LEB_56-raw decode (random-56)",   item_count, runs, iterations), setup_uleb, random_56,  bench_leb_decode_56);
+    case 6:  return bench_exec(C("LEB_56-raw decode (random-mix)",  item_count, runs, iterations), setup_uleb, random_mix, bench_leb_decode_56);
+    case 7:  return bench_exec(C("VLU_56-raw encode (random-8)",    item_count, runs, iterations), setup_dfl,  random_8,   bench_vlu_encode_56c);
+    case 8:  return bench_exec(C("VLU_56-raw encode (random-56)",   item_count, runs, iterations), setup_dfl,  random_56,  bench_vlu_encode_56c);
+    case 9:  return bench_exec(C("VLU_56-raw encode (random-mix)",  item_count, runs, iterations), setup_dfl,  random_mix, bench_vlu_encode_56c);
+    case 10: return bench_exec(C("VLU_56-raw decode (random-8)",    item_count, runs, iterations), setup_uvlu, random_8,   bench_vlu_decode_56c);
+    case 11: return bench_exec(C("VLU_56-raw decode (random-56)",   item_count, runs, iterations), setup_uvlu, random_56,  bench_vlu_decode_56c);
+    case 12: return bench_exec(C("VLU_56-raw decode (random-mix)",  item_count, runs, iterations), setup_uvlu, random_mix, bench_vlu_decode_56c);
+    case 13: return bench_exec(C("VLU_56-pack encode (random-8)",   item_count, runs, iterations), setup_dfl,  random_8,   bench_vlu_encode_vec);
+    case 14: return bench_exec(C("VLU_56-pack encode (random-56)",  item_count, runs, iterations), setup_dfl,  random_56,  bench_vlu_encode_vec);
+    case 15: return bench_exec(C("VLU_56-pack encode (random-mix)", item_count, runs, iterations), setup_dfl,  random_mix, bench_vlu_encode_vec);
+    case 16: return bench_exec(C("VLU_56-pack decode (random-8)",   item_count, runs, iterations), setup_vec,  random_8,   bench_vlu_decode_vec);
+    case 17: return bench_exec(C("VLU_56-pack decode (random-56)",  item_count, runs, iterations), setup_vec,  random_56,  bench_vlu_decode_vec);
+    case 18: return bench_exec(C("VLU_56-pack decode (random-mix)", item_count, runs, iterations), setup_vec,  random_mix, bench_vlu_decode_vec);
+    case 19: return bench_exec(C("snprintf/10 encode (random-8)" ,  item_count, runs, iterations), setup_str,  random_8,   bench_snprintf_dec_encode_56);
+    case 20: return bench_exec(C("snprintf/10 encode (random-56)",  item_count, runs, iterations), setup_str,  random_56,  bench_snprintf_dec_encode_56);
+    case 21: return bench_exec(C("snprintf/10 encode (random-mix)", item_count, runs, iterations), setup_str,  random_mix, bench_snprintf_dec_encode_56);
+    case 22: return bench_exec(C("strtoull/10 decode (random-8)",   item_count, runs, iterations), setup_dec,  random_8,   bench_strtoull_dec_decode_56);
+    case 23: return bench_exec(C("strtoull/10 decode (random-56)",  item_count, runs, iterations), setup_dec,  random_56,  bench_strtoull_dec_decode_56);
+    case 24: return bench_exec(C("strtoull/10 decode (random-mix)", item_count, runs, iterations), setup_dec,  random_mix, bench_strtoull_dec_decode_56);
+    case 25: return bench_exec(C("snprintf/16 encode (random-8)",   item_count, runs, iterations), setup_str,  random_8,   bench_snprintf_hex_encode_56);
+    case 26: return bench_exec(C("snprintf/16 encode (random-56)",  item_count, runs, iterations), setup_str,  random_56,  bench_snprintf_hex_encode_56);
+    case 27: return bench_exec(C("snprintf/16 encode (random-mix)", item_count, runs, iterations), setup_str,  random_mix, bench_snprintf_hex_encode_56);
+    case 28: return bench_exec(C("strtoull/16 decode (random-8)",   item_count, runs, iterations), setup_hex,  random_8,   bench_strtoull_hex_decode_56);
+    case 29: return bench_exec(C("strtoull/16 decode (random-56)",  item_count, runs, iterations), setup_hex,  random_56,  bench_strtoull_hex_decode_56);
+    case 30: return bench_exec(C("strtoull/16 decode (random-mix)", item_count, runs, iterations), setup_hex,  random_mix, bench_strtoull_hex_decode_56);
     }
 
     return 0;

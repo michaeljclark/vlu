@@ -17,10 +17,14 @@ set grid xtics ytics
 
 set format y "%5.3f"
 
+set datafile missing "?"
+
 set output "images/benchmarks.png"
 set title "VLU8 Performance"
 plot 'data/benchmarks.dat' using \
-	'random-encode':xtic(1) ti col, \
-	'' u 'weighted-encode' ti col, \
-	'' u 'random-decode' ti col, \
-	'' u 'weighted-decode' ti col
+	'random-8-encode':xtic(1) ti col, \
+	'' u 'random-56-encode' ti col, \
+	'' u 'random-mix-encode' ti col, \
+	'' u 'random-8-decode' ti col, \
+	'' u 'random-56-decode' ti col,	\
+	'' u 'random-mix-decode' ti col

@@ -89,7 +89,7 @@ void test_encode_uvlu()
     assert(vlu_decode_56c(0xff80 | vlu_encode_56c(0x7d).val).val == 0x7d);
 
     for (size_t i = 0; i < 100; i++) {
-        uint64_t val = random.next_weighted() & ((1ull<<56)-1ull);
+        uint64_t val = random.mix_56() & ((1ull<<56)-1ull);
         uint64_t enc = vlu_encode_56c(val).val;
         uint64_t dec = vlu_decode_56c(enc).val;
         /*
@@ -113,7 +113,7 @@ void test_encode_uleb()
     assert(leb_decode_56(leb_encode_56(4521192081866880ull)) == 4521192081866880ull);
 
     for (size_t i = 0; i < 100; i++) {
-        uint64_t val = random.next_pure();
+        uint64_t val = random.mix_56();
         assert(leb_decode_56(leb_encode_56(val)) == val);
     }
 }
