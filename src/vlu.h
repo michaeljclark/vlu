@@ -230,6 +230,43 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 #endif
 
 /*
+ * vlu_size_vec - get size of array
+ */
+static size_t vlu_size_vec(std::vector<uint64_t> &vec)
+{
+    size_t len = 0;
+    for (uint64_t val : vec) {
+        len += vlu_size_56c(val);
+    }
+    return len;
+}
+
+/*
+ * vlu_size_vec - get size of array
+ */
+static size_t vlu_items_vec(std::vector<uint8_t> &vec)
+{
+    size_t items = 0;
+    size_t l = vec.size();
+    for (size_t i = 0 ; i < l;) {
+        uint64_t d = 0;
+        size_t s = std::min((size_t)8,l-i);
+        switch (s) {
+        case 1: d = *reinterpret_cast<uint8_t*>(&vec[i]); break;
+        case 2: d = *reinterpret_cast<uint16_t*>(&vec[i]); break;
+        case 3: std::memcpy(&d, &vec[i], s); break;
+        case 4: d = *reinterpret_cast<uint32_t*>(&vec[i]); break;
+        case 5: case 6: case 7: std::memcpy(&d, &vec[i], s); break;
+        case 8: d = *reinterpret_cast<uint64_t*>(&vec[i]); break;
+        default: std::memcpy(&d, &vec[i], s); break;
+        }
+        i += vlu_size_56c(d);
+        items++;
+    }
+    return items;
+}
+
+/*
  * vlu_encode_vec - encode array
  */
 static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src)
