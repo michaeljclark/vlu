@@ -215,7 +215,9 @@ static size_t vlu_size_vec(std::vector<uint64_t> &vec)
 {
     size_t len = 0;
     for (uint64_t val : vec) {
-        len += vlu_encoded_size_56c(val);
+        size_t shamt = vlu_encoded_size_56c(val);
+        assert(shamt > 0 && shamt < 9);
+        len += shamt;
     }
     return len;
 }
@@ -240,7 +242,7 @@ static size_t vlu_items_vec(std::vector<uint8_t> &vec)
         default: std::memcpy(&d, &vec[i], s); break;
         }
         size_t shamt = vlu_decoded_size_56c(d);
-        assert(shamt > 0);
+        assert(shamt > 0 && shamt < 9);
         i += shamt;
         items++;
     }
@@ -270,7 +272,7 @@ static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src
         case 8: *reinterpret_cast<uint64_t*>(&dst[o]) = r.val; break;
         default: std::memcpy(&dst[o], &r.val, r.shamt); break;
         }
-        assert(r.shamt > 0);
+        assert(r.shamt > 0 && r.shamt < 9);
         o += r.shamt;
     }
 }
