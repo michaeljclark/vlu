@@ -79,7 +79,7 @@ simple implementation:
 ```
   t1       = ctz(~encoded)
   shamt    = t1 + 1
-  integer  = (encoded >> shamt) & ((1 << (shamt << 3)) - 1)
+  integer  = (encoded >> shamt) & ((1 << (shamt * 7)) - 1)
 ```
 
 with bit-8 continuations:
@@ -88,7 +88,7 @@ with bit-8 continuations:
   t1       = ctz(encoded)
   cont     = t1 > 7
   shamt    = cont ? 8 : t1 + 1
-  integer  = (encoded >> shamt) & ((1 << (shamt << 3)) - 1)
+  integer  = (encoded >> shamt) & ((1 << (shamt * 7)) - 1)
 ```
 
 ## Benchmarks

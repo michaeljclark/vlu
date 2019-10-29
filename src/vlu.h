@@ -184,7 +184,8 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
         "mov     $8, %[tmp1]                \n\t"
         "cmovg   %[tmp1], %[shamt]          \n\t" /* shamt > 7 ? 8 : shamt */
         "shrx    %[shamt], %[vlu], %[val]   \n\t" /* r = vlu >> shamt */
-        "lea     0(,%[shamt],8), %[tmp1]    \n\t" /* sh8 = shamt << 3 */
+        "lea     0(,%[shamt],8), %[tmp1]    \n\t" /* sh8 = shamt * 7 */
+        "sub     %[shamt], %[tmp1]          \n\t"
         "neg     %[tmp2]                    \n\t" /* mk8 = -(shamt > 7) */
         "shlx    %[tmp1], %[tmp2], %[tmp2]  \n\t" /* mk8 << sh8 */
         "andn    %[val], %[tmp2], %[val]    " /* r & ~(mk8 << sh8) */
@@ -201,7 +202,7 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
     int t1 = ctz(~vlu);
     bool cont = t1 > 7;
     int shamt = cont ? 8 : t1 + 1;
-    uint64_t mask = ~(-!cont << (shamt << 3));
+    uint64_t mask = ~(-(long long)!cont << (shamt * 7));
     uint64_t num = (vlu >> shamt) & mask;
     return vlu_result{ num, shamt };
 }
