@@ -1,0 +1,33 @@
+|Benchmark                       |Item count|Iterations|Size KiB  |Time µs   |GiB/sec   |
+|--------------------------------|----------|----------|----------|----------|----------|
+|BARE                            |1048576   |1000      |8000      |620323    |   12.594 |
+|LEB_56-raw encode (random-8)    |1048576   |1000      |8000      |3718560   |    2.101 |
+|LEB_56-raw encode (random-56)   |1048576   |1000      |8000      |5295394   |    1.475 |
+|LEB_56-raw encode (random-mix)  |1048576   |1000      |8000      |7976945   |    0.979 |
+|LEB_56-raw decode (random-8)    |1048576   |1000      |8000      |3810777   |    2.050 |
+|LEB_56-raw decode (random-56)   |1048576   |1000      |8000      |4298733   |    1.817 |
+|LEB_56-raw decode (random-mix)  |1048576   |1000      |8000      |7295214   |    1.071 |
+|VLU_56-raw encode (random-8)    |1048576   |1000      |8000      |2472276   |    3.160 |
+|VLU_56-raw encode (random-56)   |1048576   |1000      |8000      |2462346   |    3.173 |
+|VLU_56-raw encode (random-mix)  |1048576   |1000      |8000      |2865564   |    2.726 |
+|VLU_56-raw decode (random-8)    |1048576   |1000      |8000      |1172606   |    6.663 |
+|VLU_56-raw decode (random-56)   |1048576   |1000      |8000      |1173389   |    6.658 |
+|VLU_56-raw decode (random-mix)  |1048576   |1000      |8000      |1175671   |    6.645 |
+|VLU_56-pack encode (random-8)   |1048576   |1000      |8000      |8259589   |    0.946 |
+|VLU_56-pack encode (random-56)  |1048576   |1000      |8000      |4660730   |    1.676 |
+|VLU_56-pack encode (random-mix) |1048576   |1000      |8000      |10551227  |    0.740 |
+|VLU_56-pack decode (random-8)   |1048576   |1000      |8000      |5963904   |    1.310 |
+|VLU_56-pack decode (random-56)  |1048576   |1000      |8000      |5871004   |    1.331 |
+|VLU_56-pack decode (random-mix) |1048576   |1000      |8000      |5990512   |    1.304 |
+|snprintf/10 encode (random-8)   |1048576   |1000      |8000      |49647433  |    0.157 |
+|snprintf/10 encode (random-56)  |1048576   |1000      |8000      |62734285  |    0.125 |
+|snprintf/10 encode (random-mix) |1048576   |1000      |8000      |61909451  |    0.126 |
+|strtoull/10 decode (random-8)   |1048576   |1000      |8000      |12138848  |    0.644 |
+|strtoull/10 decode (random-56)  |1048576   |1000      |8000      |24816419  |    0.315 |
+|strtoull/10 decode (random-mix) |1048576   |1000      |8000      |21899502  |    0.357 |
+|snprintf/16 encode (random-8)   |1048576   |1000      |8000      |45197043  |    0.173 |
+|snprintf/16 encode (random-56)  |1048576   |1000      |8000      |55886294  |    0.140 |
+|snprintf/16 encode (random-mix) |1048576   |1000      |8000      |54694201  |    0.143 |
+|strtoull/16 decode (random-8)   |1048576   |1000      |8000      |13348789  |    0.585 |
+|strtoull/16 decode (random-56)  |1048576   |1000      |8000      |61364335  |    0.127 |
+|strtoull/16 decode (random-mix) |1048576   |1000      |8000      |36900809  |    0.212 |
