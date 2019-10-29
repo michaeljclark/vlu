@@ -187,7 +187,7 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
         "lea     0(,%[shamt],8), %[tmp1]    \n\t" /* sh8 = shamt << 3 */
         "neg     %[tmp2]                    \n\t" /* mk8 = -(shamt > 7) */
         "shlx    %[tmp1], %[tmp2], %[tmp2]  \n\t" /* mk8 << sh8 */
-        "andn    %[val], %[tmp2], %[val]    \n\t" /* r & ~(mk8 << sh8) */
+        "andn    %[val], %[tmp2], %[val]    " /* r & ~(mk8 << sh8) */
         : [val] "=&r" (r.val), [shamt] "=&r" (r.shamt),
           [tmp1] "=&r" (tmp1), [tmp2] "=&r" (tmp2)
         : [vlu] "r" (vlu)
