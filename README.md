@@ -102,7 +102,7 @@ _Figure 2: VLU8 Benchmarks (GiB/sec)_
 
 |Benchmark     |random-encode (GiB/sec) |weighted-encode (GiB/sec) |random-decode (GiB/sec) |weighted-decode (GiB/sec) |
 |:-------------|-------------:|---------------:|-------------:|---------------:|
-|VLU&#8209;56&#8209;pack   |1.693         |0.741           |1.291         |1.281           |
+|VLU&#8209;56&#8209;pack   |1.693         |0.741           |1.325         |1.307           |
 |VLU-56-raw    |3.172         |2.712           |6.647         |6.643           |
 |LEB-56-raw    |1.442         |0.943           |1.755         |0.996           |
 |snprintf-10   |0.126         |0.129           |0.318         |0.351           |
