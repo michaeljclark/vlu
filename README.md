@@ -110,8 +110,8 @@ _Figure 2: VLU8 Benchmarks (GiB/sec)_
 
 #### Benchmark Notes
 
-- `VLU-56-raw` and `LEB-56-raw` just test the raw encode/decode functions.
 - `VLU_56-pack` tests encoding/decoding plus packing/unpacking to/from byte vectors.
+- `VLU-56-raw` and `LEB-56-raw` just test the raw encode/decode functions.
 - `snprintf` denotes `strtoull` and `snprintf` for ASCII decimal or hexidecimal.
 
 ## Example code
