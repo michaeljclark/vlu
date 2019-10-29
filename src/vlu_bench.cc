@@ -208,6 +208,16 @@ static void bench_vlu_decode_vec(bench_context &ctx)
     vlu_decode_vec(ctx.out, ctx.vbuf);
 }
 
+static void bench_leb_encode_vec(bench_context &ctx)
+{
+    leb_encode_vec(ctx.vbuf, ctx.in);
+}
+
+static void bench_leb_decode_vec(bench_context &ctx)
+{
+    leb_decode_vec(ctx.out, ctx.vbuf);
+}
+
 
 /*
  * benchmark result formatting
@@ -291,30 +301,36 @@ int run_benchmark(size_t item_count, size_t benchmark, size_t runs, size_t itera
     case 4:  return bench_exec(C("LEB_56-raw decode (random-8)",    item_count, runs, iterations), setup_uleb, random_8,   bench_leb_decode_56);
     case 5:  return bench_exec(C("LEB_56-raw decode (random-56)",   item_count, runs, iterations), setup_uleb, random_56,  bench_leb_decode_56);
     case 6:  return bench_exec(C("LEB_56-raw decode (random-mix)",  item_count, runs, iterations), setup_uleb, random_mix, bench_leb_decode_56);
-    case 7:  return bench_exec(C("VLU_56-raw encode (random-8)",    item_count, runs, iterations), setup_dfl,  random_8,   bench_vlu_encode_56c);
-    case 8:  return bench_exec(C("VLU_56-raw encode (random-56)",   item_count, runs, iterations), setup_dfl,  random_56,  bench_vlu_encode_56c);
-    case 9:  return bench_exec(C("VLU_56-raw encode (random-mix)",  item_count, runs, iterations), setup_dfl,  random_mix, bench_vlu_encode_56c);
-    case 10: return bench_exec(C("VLU_56-raw decode (random-8)",    item_count, runs, iterations), setup_uvlu, random_8,   bench_vlu_decode_56c);
-    case 11: return bench_exec(C("VLU_56-raw decode (random-56)",   item_count, runs, iterations), setup_uvlu, random_56,  bench_vlu_decode_56c);
-    case 12: return bench_exec(C("VLU_56-raw decode (random-mix)",  item_count, runs, iterations), setup_uvlu, random_mix, bench_vlu_decode_56c);
-    case 13: return bench_exec(C("VLU_56-pack encode (random-8)",   item_count, runs, iterations), setup_dfl,  random_8,   bench_vlu_encode_vec);
-    case 14: return bench_exec(C("VLU_56-pack encode (random-56)",  item_count, runs, iterations), setup_dfl,  random_56,  bench_vlu_encode_vec);
-    case 15: return bench_exec(C("VLU_56-pack encode (random-mix)", item_count, runs, iterations), setup_dfl,  random_mix, bench_vlu_encode_vec);
-    case 16: return bench_exec(C("VLU_56-pack decode (random-8)",   item_count, runs, iterations), setup_vec,  random_8,   bench_vlu_decode_vec);
-    case 17: return bench_exec(C("VLU_56-pack decode (random-56)",  item_count, runs, iterations), setup_vec,  random_56,  bench_vlu_decode_vec);
-    case 18: return bench_exec(C("VLU_56-pack decode (random-mix)", item_count, runs, iterations), setup_vec,  random_mix, bench_vlu_decode_vec);
-    case 19: return bench_exec(C("snprintf/10 encode (random-8)" ,  item_count, runs, iterations), setup_str,  random_8,   bench_snprintf_dec_encode_56);
-    case 20: return bench_exec(C("snprintf/10 encode (random-56)",  item_count, runs, iterations), setup_str,  random_56,  bench_snprintf_dec_encode_56);
-    case 21: return bench_exec(C("snprintf/10 encode (random-mix)", item_count, runs, iterations), setup_str,  random_mix, bench_snprintf_dec_encode_56);
-    case 22: return bench_exec(C("strtoull/10 decode (random-8)",   item_count, runs, iterations), setup_dec,  random_8,   bench_strtoull_dec_decode_56);
-    case 23: return bench_exec(C("strtoull/10 decode (random-56)",  item_count, runs, iterations), setup_dec,  random_56,  bench_strtoull_dec_decode_56);
-    case 24: return bench_exec(C("strtoull/10 decode (random-mix)", item_count, runs, iterations), setup_dec,  random_mix, bench_strtoull_dec_decode_56);
-    case 25: return bench_exec(C("snprintf/16 encode (random-8)",   item_count, runs, iterations), setup_str,  random_8,   bench_snprintf_hex_encode_56);
-    case 26: return bench_exec(C("snprintf/16 encode (random-56)",  item_count, runs, iterations), setup_str,  random_56,  bench_snprintf_hex_encode_56);
-    case 27: return bench_exec(C("snprintf/16 encode (random-mix)", item_count, runs, iterations), setup_str,  random_mix, bench_snprintf_hex_encode_56);
-    case 28: return bench_exec(C("strtoull/16 decode (random-8)",   item_count, runs, iterations), setup_hex,  random_8,   bench_strtoull_hex_decode_56);
-    case 29: return bench_exec(C("strtoull/16 decode (random-56)",  item_count, runs, iterations), setup_hex,  random_56,  bench_strtoull_hex_decode_56);
-    case 30: return bench_exec(C("strtoull/16 decode (random-mix)", item_count, runs, iterations), setup_hex,  random_mix, bench_strtoull_hex_decode_56);
+    case 7:  return bench_exec(C("LEB_56-pack encode (random-8)",   item_count, runs, iterations), setup_dfl,  random_8,   bench_leb_encode_vec);
+    case 8:  return bench_exec(C("LEB_56-pack encode (random-56)",  item_count, runs, iterations), setup_dfl,  random_56,  bench_leb_encode_vec);
+    case 9:  return bench_exec(C("LEB_56-pack encode (random-mix)", item_count, runs, iterations), setup_dfl,  random_mix, bench_leb_encode_vec);
+    case 10: return bench_exec(C("LEB_56-pack decode (random-8)",   item_count, runs, iterations), setup_vec,  random_8,   bench_leb_decode_vec);
+    case 11: return bench_exec(C("LEB_56-pack decode (random-56)",  item_count, runs, iterations), setup_vec,  random_56,  bench_leb_decode_vec);
+    case 12: return bench_exec(C("LEB_56-pack decode (random-mix)", item_count, runs, iterations), setup_vec,  random_mix, bench_leb_decode_vec);
+    case 13: return bench_exec(C("VLU_56-raw encode (random-8)",    item_count, runs, iterations), setup_dfl,  random_8,   bench_vlu_encode_56c);
+    case 14: return bench_exec(C("VLU_56-raw encode (random-56)",   item_count, runs, iterations), setup_dfl,  random_56,  bench_vlu_encode_56c);
+    case 15: return bench_exec(C("VLU_56-raw encode (random-mix)",  item_count, runs, iterations), setup_dfl,  random_mix, bench_vlu_encode_56c);
+    case 16: return bench_exec(C("VLU_56-raw decode (random-8)",    item_count, runs, iterations), setup_uvlu, random_8,   bench_vlu_decode_56c);
+    case 17: return bench_exec(C("VLU_56-raw decode (random-56)",   item_count, runs, iterations), setup_uvlu, random_56,  bench_vlu_decode_56c);
+    case 18: return bench_exec(C("VLU_56-raw decode (random-mix)",  item_count, runs, iterations), setup_uvlu, random_mix, bench_vlu_decode_56c);
+    case 19: return bench_exec(C("VLU_56-pack encode (random-8)",   item_count, runs, iterations), setup_dfl,  random_8,   bench_vlu_encode_vec);
+    case 20: return bench_exec(C("VLU_56-pack encode (random-56)",  item_count, runs, iterations), setup_dfl,  random_56,  bench_vlu_encode_vec);
+    case 21: return bench_exec(C("VLU_56-pack encode (random-mix)", item_count, runs, iterations), setup_dfl,  random_mix, bench_vlu_encode_vec);
+    case 22: return bench_exec(C("VLU_56-pack decode (random-8)",   item_count, runs, iterations), setup_vec,  random_8,   bench_vlu_decode_vec);
+    case 23: return bench_exec(C("VLU_56-pack decode (random-56)",  item_count, runs, iterations), setup_vec,  random_56,  bench_vlu_decode_vec);
+    case 24: return bench_exec(C("VLU_56-pack decode (random-mix)", item_count, runs, iterations), setup_vec,  random_mix, bench_vlu_decode_vec);
+    case 25: return bench_exec(C("snprintf/10 encode (random-8)" ,  item_count, runs, iterations), setup_str,  random_8,   bench_snprintf_dec_encode_56);
+    case 26: return bench_exec(C("snprintf/10 encode (random-56)",  item_count, runs, iterations), setup_str,  random_56,  bench_snprintf_dec_encode_56);
+    case 27: return bench_exec(C("snprintf/10 encode (random-mix)", item_count, runs, iterations), setup_str,  random_mix, bench_snprintf_dec_encode_56);
+    case 28: return bench_exec(C("strtoull/10 decode (random-8)",   item_count, runs, iterations), setup_dec,  random_8,   bench_strtoull_dec_decode_56);
+    case 29: return bench_exec(C("strtoull/10 decode (random-56)",  item_count, runs, iterations), setup_dec,  random_56,  bench_strtoull_dec_decode_56);
+    case 30: return bench_exec(C("strtoull/10 decode (random-mix)", item_count, runs, iterations), setup_dec,  random_mix, bench_strtoull_dec_decode_56);
+    case 31: return bench_exec(C("snprintf/16 encode (random-8)",   item_count, runs, iterations), setup_str,  random_8,   bench_snprintf_hex_encode_56);
+    case 32: return bench_exec(C("snprintf/16 encode (random-56)",  item_count, runs, iterations), setup_str,  random_56,  bench_snprintf_hex_encode_56);
+    case 33: return bench_exec(C("snprintf/16 encode (random-mix)", item_count, runs, iterations), setup_str,  random_mix, bench_snprintf_hex_encode_56);
+    case 34: return bench_exec(C("strtoull/16 decode (random-8)",   item_count, runs, iterations), setup_hex,  random_8,   bench_strtoull_hex_decode_56);
+    case 35: return bench_exec(C("strtoull/16 decode (random-56)",  item_count, runs, iterations), setup_hex,  random_56,  bench_strtoull_hex_decode_56);
+    case 36: return bench_exec(C("strtoull/16 decode (random-mix)", item_count, runs, iterations), setup_hex,  random_mix, bench_strtoull_hex_decode_56);
     }
 
     return 0;

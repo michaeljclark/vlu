@@ -104,21 +104,7 @@ void test_encode_uvlu()
     }
 }
 
-void test_encode_uleb()
-{
-    bench_random random;
-
-    assert(leb_decode_56(0x268EE5).val == 624485);
-    assert(leb_encode_56(624485).val == 0x268EE5);
-    assert(leb_decode_56(leb_encode_56(4521192081866880ull).val).val == 4521192081866880ull);
-
-    for (size_t i = 0; i < 100; i++) {
-        uint64_t val = random.mix_56();
-        assert(leb_decode_56(leb_encode_56(val).val).val == val);
-    }
-}
-
-void test_encode_decode_u7()
+void test_roundtrip_uvlu_u7()
 {
     std::vector<uint64_t> d1 = {
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
@@ -134,7 +120,7 @@ void test_encode_decode_u7()
     }
 }
 
-void test_encode_decode_u14()
+void test_roundtrip_uvlu_u14()
 {
     std::vector<uint64_t> d1 = {
           250,   256,   257,   258,
@@ -153,7 +139,7 @@ void test_encode_decode_u14()
     }
 }
 
-void test_encode_decode_u21()
+void test_roundtrip_uvlu_u21()
 {
     std::vector<uint64_t> d1 = {
         32768,  32769,  32770,  32771,
@@ -172,6 +158,74 @@ void test_encode_decode_u21()
     }
 }
 
+void test_encode_uleb()
+{
+    bench_random random;
+
+    assert(leb_decode_56(0x268EE5).val == 624485);
+    assert(leb_encode_56(624485).val == 0x268EE5);
+    assert(leb_decode_56(leb_encode_56(4521192081866880ull).val).val == 4521192081866880ull);
+
+    for (size_t i = 0; i < 100; i++) {
+        uint64_t val = random.mix_56();
+        assert(leb_decode_56(leb_encode_56(val).val).val == val);
+    }
+}
+
+void test_roundtrip_uleb_u7()
+{
+    std::vector<uint64_t> d1 = {
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+    };
+    std::vector<uint8_t> d2;
+    std::vector<uint64_t> d3;
+    leb_encode_vec(d2, d1);
+    leb_decode_vec(d3, d2);
+    assert(d2.size() == 16);
+    assert(d1.size() == d3.size());
+    for (size_t i = 0; i < d1.size(); i++) {
+        assert(d1[i] == d3[i]);
+    }
+}
+
+void test_roundtrip_uleb_u14()
+{
+    std::vector<uint64_t> d1 = {
+          250,   256,   257,   258,
+         1000,  1001,  1002,  1003,
+         5000,  5001,  5002,  5003,
+        10000, 10001, 10000, 10001,
+    };
+    std::vector<uint8_t> d2;
+    std::vector<uint64_t> d3;
+    leb_encode_vec(d2, d1);
+    leb_decode_vec(d3, d2);
+    assert(d2.size() == 32);
+    assert(d1.size() == d3.size());
+    for (size_t i = 0; i < d1.size(); i++) {
+        assert(d1[i] == d3[i]);
+    }
+}
+
+void test_roundtrip_uleb_u21()
+{
+    std::vector<uint64_t> d1 = {
+        32768,  32769,  32770,  32771,
+        65536,  65537,  65538,  65539,
+        90000,  90001,  90000,  90001,
+       100000, 100001, 100000, 100001,
+    };
+    std::vector<uint8_t> d2;
+    std::vector<uint64_t> d3;
+    leb_encode_vec(d2, d1);
+    leb_decode_vec(d3, d2);
+    assert(d2.size() == 48);
+    assert(d1.size() == d3.size());
+    for (size_t i = 0; i < d1.size(); i++) {
+        assert(d1[i] == d3[i]);
+    }
+}
+
 /*
  * main program
  */
@@ -180,10 +234,13 @@ void test_encode_decode_u21()
 void run_tests()
 {
     test_encode_uvlu();
+    test_roundtrip_uvlu_u7();
+    test_roundtrip_uvlu_u14();
+    test_roundtrip_uvlu_u21();
     test_encode_uleb();
-    test_encode_decode_u7();
-    test_encode_decode_u14();
-    test_encode_decode_u21();
+    test_roundtrip_uleb_u7();
+    test_roundtrip_uleb_u14();
+    test_roundtrip_uleb_u21();
 }
 
 int main(int argc, char **argv)
