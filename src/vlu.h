@@ -314,30 +314,31 @@ static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src
 /*
  * leb_encode_56 - LEB128 encoding up to 56-bits
  */
-static uint64_t leb_encode_56(uint64_t num)
+static vlu_result leb_encode_56(uint64_t num)
 {
-    uint64_t orig = num;
     uint64_t leb = 0;
-    for (size_t i = 0; i < 8; i++) {
+    size_t i;
+    for (i = 0; i < 8; i++) {
         int8_t b = (int8_t)extract_field<uint64_t>(num, 0, 7);
         num >>= 7;
         b |= (num == 0 ? 0 : 0x80);
         leb |= insert_field<uint64_t>(b, i*8, 8);
         if (num == 0) break;
     }
-    return leb;
+    return (vlu_result) { leb, (int)i + 1 };
 }
 
 /*
  * leb_decode_56 - LEB128 decoding up to 56-bits
  */
-static uint64_t leb_decode_56(uint64_t leb)
+static vlu_result leb_decode_56(uint64_t leb)
 {
     uint64_t num = 0;
-    for (size_t i = 0; i < 8; i++) {
+    size_t i;
+    for (i = 0; i < 8; i++) {
         int8_t b = (int8_t)extract_field<uint64_t>(leb, i*8, 8);
         num |= insert_field<uint64_t>(b, i*7, 7);
         if (b >= 0) break;
     }
-    return num;
+    return (vlu_result) { num, (int)i + 1 };
 }

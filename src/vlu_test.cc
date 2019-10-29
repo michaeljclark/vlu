@@ -108,13 +108,13 @@ void test_encode_uleb()
 {
     bench_random random;
 
-    assert(leb_decode_56(0x268EE5) == 624485);
-    assert(leb_encode_56(624485) == 0x268EE5);
-    assert(leb_decode_56(leb_encode_56(4521192081866880ull)) == 4521192081866880ull);
+    assert(leb_decode_56(0x268EE5).val == 624485);
+    assert(leb_encode_56(624485).val == 0x268EE5);
+    assert(leb_decode_56(leb_encode_56(4521192081866880ull).val).val == 4521192081866880ull);
 
     for (size_t i = 0; i < 100; i++) {
         uint64_t val = random.mix_56();
-        assert(leb_decode_56(leb_encode_56(val)) == val);
+        assert(leb_decode_56(leb_encode_56(val).val).val == val);
     }
 }
 

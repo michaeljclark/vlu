@@ -89,7 +89,7 @@ static void setup_uleb(bench_context &ctx, uint64_t(*rnd)(bench_context&))
     ctx.in.resize(ctx.item_count);
     ctx.out.resize(ctx.item_count);
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.in[i] = leb_encode_56(rnd(ctx));
+        ctx.in[i] = leb_encode_56(rnd(ctx)).val;
     }
 }
 
@@ -159,14 +159,14 @@ static void bench_vlu_decode_56c(bench_context &ctx)
 static void bench_leb_encode_56(bench_context &ctx)
 {
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.out[i] = leb_encode_56(ctx.in[i]);
+        ctx.out[i] = leb_encode_56(ctx.in[i]).val;
     }
 }
 
 static void bench_leb_decode_56(bench_context &ctx)
 {
     for (size_t i = 0; i < ctx.item_count; i++) {
-        ctx.out[i] = leb_decode_56(ctx.in[i]);
+        ctx.out[i] = leb_decode_56(ctx.in[i]).val;
     }
 }
 
