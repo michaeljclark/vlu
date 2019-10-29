@@ -60,7 +60,7 @@ static void print_one_uvlu(uint64_t val)
 {
     uint64_t vlu = vlu_encode_56c(val).val;
     uint64_t num = vlu_decode_56c(vlu).val;
-    size_t sz = vlu_size_56(val);
+    size_t sz = vlu_encoded_size_56c(val);
 
     print_binary("IN       ", sz, val);
     print_binary(" \\VLU    ", sz, vlu);

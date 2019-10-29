@@ -45,15 +45,45 @@ void test_encode_uvlu()
 {
     bench_random random;
 
-    assert(vlu_encode_56(0).val == 0b0);
-    assert(vlu_encode_56(1).val == 0b10);
-    assert(vlu_encode_56(2).val == 0b100);
-    assert(vlu_encode_56(0x00ffffffffffffff).val == 0xffffffffffffff7f);
+    assert(vlu_encoded_size_56c(0) == 1);
+    assert(vlu_encoded_size_56c(1) == 1);
+    assert(vlu_encoded_size_56c(2) == 1);
+    assert(vlu_encoded_size_56c(0x123456789abcde) == 8);
+    assert(vlu_encoded_size_56c(0xffffffffffffff) == 8);
+
+    assert(vlu_decoded_size_56c(0b0000) == 1);
+    assert(vlu_decoded_size_56c(0b0001) == 2);
+    assert(vlu_decoded_size_56c(0b0101) == 2);
+    assert(vlu_decoded_size_56c(0b0011) == 3);
+    assert(vlu_decoded_size_56c(0b1011) == 3);
+    assert(vlu_decoded_size_56c(0x123456789abcde7f) == 8);
+    assert(vlu_decoded_size_56c(0xffffffffffffff7f) == 8);
 
     assert(vlu_encode_56c(0).val == 0b0);
+    assert(vlu_encode_56c(0).shamt == 1);
     assert(vlu_encode_56c(1).val == 0b10);
+    assert(vlu_encode_56c(1).shamt == 1);
     assert(vlu_encode_56c(2).val == 0b100);
+    assert(vlu_encode_56c(2).shamt == 1);
+    assert(vlu_encode_56c(0x00123456789abcde).val == 0x123456789abcde7f);
+    assert(vlu_encode_56c(0x00123456789abcde).shamt == 8);
     assert(vlu_encode_56c(0x00ffffffffffffff).val == 0xffffffffffffff7f);
+    assert(vlu_encode_56c(0x00ffffffffffffff).shamt == 8);
+
+    assert(vlu_decode_56c(0b0000).val == 0b0);
+    assert(vlu_decode_56c(0b0000).shamt == 1);
+    assert(vlu_decode_56c(0b0001).val == 0);
+    assert(vlu_decode_56c(0b0001).shamt == 2);
+    assert(vlu_decode_56c(0b0101).val == 1);
+    assert(vlu_decode_56c(0b0101).shamt == 2);
+    assert(vlu_decode_56c(0b0011).val == 0);
+    assert(vlu_decode_56c(0b0011).shamt == 3);
+    assert(vlu_decode_56c(0b1011).val == 1);
+    assert(vlu_decode_56c(0b1011).shamt == 3);
+    assert(vlu_decode_56c(0x123456789abcde7f).val == 0x123456789abcde);
+    assert(vlu_decode_56c(0x123456789abcde7f).shamt == 8);
+    assert(vlu_decode_56c(0xffffffffffffff7f).val == 0x00ffffffffffffff);
+    assert(vlu_decode_56c(0xffffffffffffff7f).shamt == 8);
 
     for (size_t i = 0; i < 100; i++) {
         uint64_t val = random.next_weighted() & ((1ull<<56)-1ull);

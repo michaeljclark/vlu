@@ -107,19 +107,11 @@ struct vlu_result
 };
 
 /*
- * vlu_size_56 - VLU8 packet size in bytes
+ * vlu_encoded_size_56c - VLU8 packet size in bytes
  */
-static int vlu_size_56(uint64_t num)
+static int vlu_encoded_size_56c(uint64_t num)
 {
-    int lz = clz(num);
-    return 9 - ((lz - 1) / 7);
-}
-
-/*
- * vlu_size_56c - VLU8 packet size in bytes
- */
-static int vlu_size_56c(uint64_t num)
-{
+    if (!num) return 1;
     int lz = clz(num);
     int t1 = 8 - ((lz - 1) / 7);
     bool cont = t1 > 7;
@@ -127,29 +119,14 @@ static int vlu_size_56c(uint64_t num)
 }
 
 /*
- * vlu_encode_56 - VLU8 encoding up to 56-bits
+ * vlu_decoded_size_56c - VLU8 packet size in bytes
  */
-static struct vlu_result vlu_encode_56(uint64_t num)
-{
-    int lz = clz(num);
-    int t1 = 8 - ((lz - 1) / 7);
-    int shamt = t1 + 1;
-    uint64_t uvlu = (num << shamt)
-        | (((num!=0) << (shamt-1))-(num!=0));
-    return (vlu_result) { uvlu, shamt };
-}
-
-/*
- * vlu_decode_56 - VLU8 decoding up to 56-bits
- */
-static struct vlu_result vlu_decode_56(uint64_t uvlu)
+static int vlu_decoded_size_56c(uint64_t uvlu)
 {
     int t1 = ctz(~uvlu);
     bool cond = t1 > 7;
     int shamt = cond ? 8 : t1 + 1;
-    uint64_t mask = ~(-!cond << (shamt << 3));
-    uint64_t num = (uvlu >> shamt) & mask;
-    return (vlu_result) { num, shamt };
+    return shamt;
 }
 
 /*
@@ -157,6 +134,7 @@ static struct vlu_result vlu_decode_56(uint64_t uvlu)
  */
 static struct vlu_result vlu_encode_56c(uint64_t num)
 {
+    if (!num) return (vlu_result) { 0, 1 };
     int lz = clz(num);
     int t1 = 8 - ((lz - 1) / 7);
     bool cont = t1 > 7;
@@ -230,13 +208,13 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
 #endif
 
 /*
- * vlu_size_vec - get size of array
+ * vlu_size_vec - calculate packed size in bytes
  */
 static size_t vlu_size_vec(std::vector<uint64_t> &vec)
 {
     size_t len = 0;
     for (uint64_t val : vec) {
-        len += vlu_size_56c(val);
+        len += vlu_encoded_size_56c(val);
     }
     return len;
 }
@@ -260,7 +238,9 @@ static size_t vlu_items_vec(std::vector<uint8_t> &vec)
         case 8: d = *reinterpret_cast<uint64_t*>(&vec[i]); break;
         default: std::memcpy(&d, &vec[i], s); break;
         }
-        i += vlu_size_56c(d);
+        size_t shamt = vlu_decoded_size_56c(d);
+        assert(shamt > 0);
+        i += shamt;
         items++;
     }
     return items;
@@ -272,11 +252,14 @@ static size_t vlu_items_vec(std::vector<uint8_t> &vec)
 static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src)
 {
     size_t l = src.size();
-    dst.reserve(l*4);
-    for (size_t i = 0 ; i < l; i++) {
-        vlu_result r = vlu_encode_56c(src[i]);
-        size_t o = dst.size();
-        dst.resize(o + r.shamt);
+    size_t o = 0;
+
+    size_t items = vlu_size_vec(src);
+    dst.resize(items);
+
+    for (uint64_t v : src)
+    {
+        vlu_result r = vlu_encode_56c(v);
         switch (r.shamt) {
         case 1: *reinterpret_cast<uint8_t*>(&dst[o]) = (uint8_t)r.val; break;
         case 2: *reinterpret_cast<uint16_t*>(&dst[o]) = (uint16_t)r.val; break;
@@ -286,6 +269,8 @@ static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src
         case 8: *reinterpret_cast<uint64_t*>(&dst[o]) = r.val; break;
         default: std::memcpy(&dst[o], &r.val, r.shamt); break;
         }
+        assert(r.shamt > 0);
+        o += r.shamt;
     }
 }
 
@@ -295,8 +280,13 @@ static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src
 static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src)
 {
     size_t l = src.size();
-    dst.reserve(l/4);
-    for (size_t i = 0 ; i < l;) {
+    size_t o = 0;
+
+    size_t items = vlu_items_vec(src);
+    dst.resize(items);
+
+    for (size_t i = 0 ; i < l;)
+    {
         uint64_t d = 0;
         size_t s = std::min((size_t)8,l-i);
         switch (s) {
@@ -309,8 +299,11 @@ static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src
         default: std::memcpy(&d, &src[i], s); break;
         }
         vlu_result r = vlu_decode_56c(d);
-        dst.push_back(r.val);
+        assert(r.shamt > 0);
+        assert(o < items);
+        dst[o] = r.val;
         i += r.shamt;
+        o++;
     }
 }
 

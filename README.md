@@ -102,15 +102,16 @@ _Figure 2: VLU8 Benchmarks (GiB/sec)_
 
 |Benchmark     |random-encode (GiB/sec) |weighted-encode (GiB/sec) |random-decode (GiB/sec) |weighted-decode (GiB/sec) |
 |:-------------|-------------:|---------------:|-------------:|---------------:|
-|VLU-56        |4.493         |4.500           |6.251         |6.216           |
-|VLU-56C       |3.310         |3.313           |6.976         |6.951           |
-|LEB-56        |1.442         |0.943           |1.755         |0.996           |
+|VLU&#8209;56&#8209;pack   |1.693         |0.741           |1.260         |1.255           |
+|VLU-56-raw    |3.172         |2.712           |7.028         |7.002           |
+|LEB-56-raw    |1.442         |0.943           |1.755         |0.996           |
 |snprintf-10   |0.126         |0.129           |0.318         |0.351           |
 |snprintf-16   |0.143         |0.146           |0.129         |0.217           |
 
 #### Benchmark Notes
 
-- `VLU-56C` denotes the VLU decoder variant that checks for continuations.
+- `VLU-56-raw` and `LEB-56-raw` just test the raw encode/decode functions.
+- `VLU_56-pack` tests encoding/decoding plus packing/unpacking to/from byte vectors.
 - `snprintf` denotes `strtoull` and `snprintf` for ASCII decimal or hexidecimal.
 
 ## Example code
