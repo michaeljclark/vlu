@@ -283,24 +283,25 @@ static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src
 static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src)
 {
     size_t l = src.size();
-    size_t o = 0;
+    size_t i = 0, o = 0;
 
     size_t items = vlu_items_vec(src);
     dst.resize(items);
 
-    for (size_t i = 0 ; i < l;)
-    {
+    for (; i < l - 8; )  {
+        uint64_t d = *reinterpret_cast<uint64_t*>(&src[i]);
+        vlu_result r = vlu_decode_56c(d);
+        assert(r.shamt > 0);
+        assert(o < items);
+        dst[o] = r.val;
+        i += r.shamt;
+        o++;
+    }
+
+    for (; i < l; ) {
         uint64_t d = 0;
         size_t s = std::min((size_t)8,l-i);
-        switch (s) {
-        case 1: d = *reinterpret_cast<uint8_t*>(&src[i]); break;
-        case 2: d = *reinterpret_cast<uint16_t*>(&src[i]); break;
-        case 3: std::memcpy(&d, &src[i], s); break;
-        case 4: d = *reinterpret_cast<uint32_t*>(&src[i]); break;
-        case 5: case 6: case 7: std::memcpy(&d, &src[i], s); break;
-        case 8: d = *reinterpret_cast<uint64_t*>(&src[i]); break;
-        default: std::memcpy(&d, &src[i], s); break;
-        }
+        std::memcpy(&d, &src[i], s);
         vlu_result r = vlu_decode_56c(d);
         assert(r.shamt > 0);
         assert(o < items);

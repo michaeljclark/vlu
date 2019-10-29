@@ -10,7 +10,7 @@ set style line 101 lc rgb '#606060' lt 1 lw 1
 set border ls 101
 
 set ylabel "GiB/sec" offset 0,0,0
-set yrange [0:8]
+set yrange [0:7]
 
 set ytics 0,0.5,10
 set grid xtics ytics
