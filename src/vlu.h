@@ -124,8 +124,8 @@ static int vlu_encoded_size_56c(uint64_t num)
 static int vlu_decoded_size_56c(uint64_t uvlu)
 {
     int t1 = ctz(~uvlu);
-    bool cond = t1 > 7;
-    int shamt = cond ? 8 : t1 + 1;
+    bool cont = t1 > 7;
+    int shamt = cont ? 8 : t1 + 1;
     return shamt;
 }
 
