@@ -193,7 +193,7 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
     int t1 = ctz(~vlu);
     bool cont = t1 > 7;
     int shamt = cont ? 8 : t1 + 1;
-    uint64_t mask = ~(-(long long)!cont << (shamt * 7));
+    uint64_t mask = ~(-(int64_t)!cont << (shamt * 7));
     uint64_t num = (vlu >> shamt) & mask;
     return (vlu_result) { num, shamt | -(int64_t)cont };
 }
