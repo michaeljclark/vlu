@@ -50,9 +50,9 @@ std::string to_binary(uint64_t val)
     return s;
 }
 
-static void print_binary(const char* name, size_t aux, uint64_t val)
+static void print_binary(const char* name, int64_t aux, uint64_t val)
 {
-    printf("[%zu] %s= % 20" PRId64 " 0x%016" PRIx64 " (%s)\n",
+    printf("[%" PRId64 "] %s= % 20" PRId64 " 0x%016" PRIx64 " (%s)\n",
         aux, name, val, val, to_binary(val).c_str());
 }
 
