@@ -81,11 +81,11 @@ with open('vlu-figure.tex', 'w') as fp:
     struct vlu_result vlu_decode(uint64_t vlu)
     {
         int t1 = __builtin_ctzll(~vlu);
-        bool cond = t1 > 7;
-        int shamt = cond ? 8 : t1 + 1;
-        uint64_t mask = ~(-!cond << (shamt << 3));
+        bool cont = t1 > 7;
+        int shamt = cont ? 8 : t1 + 1;
+        uint64_t mask = ~(-(int64_t)!cont << (shamt * 7));
         uint64_t num = (vlu >> shamt) & mask;
-        return (vlu_result) { num, shamt };
+        return (vlu_result) { num, shamt | -(int64_t)cont };
     }
     \\end{verbatim}
     \\end{minipage}\\hfill
@@ -97,13 +97,15 @@ with open('vlu-figure.tex', 'w') as fp:
         tzcnt   rcx, rcx
         xor     rsi, rsi
         cmp     rcx, 7
-        setne   sil
+        setg    sil
         lea     rdx, [rcx + 1]
         mov     rcx, 8
         cmovg   rdx, rcx
+        imul    rcx, rdx, 7
         shrx    rax, rdi, rdx
-        lea     rcx, [rdx * 8]
         neg     rsi
+        or      rdx, rsi
+        not     rsi
         shlx    rsi, rsi, rcx
         andn    rax, rsi, rax
         ret     ; struct { rax; rdx; }
