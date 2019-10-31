@@ -32,6 +32,8 @@
 
 #include "bits.h"
 
+#define USE_MISALIGNED_LOADS 0
+
 /*
  * Bit field macros
  */
@@ -218,6 +220,7 @@ static size_t vlu_size_vec(std::vector<uint64_t> &vec)
 /*
  * vlu_size_vec - get size of array
  */
+#if USE_MISALIGNED_LOADS
 static size_t vlu_items_vec(std::vector<uint8_t> &vec)
 {
     size_t items = 0;
@@ -241,6 +244,48 @@ static size_t vlu_items_vec(std::vector<uint8_t> &vec)
     }
     return items;
 }
+#else
+static size_t vlu_items_vec(std::vector<uint8_t> &vec)
+{
+    size_t items = 0;
+    ptrdiff_t l = vec.size();
+
+    ptrdiff_t shamt = 8;
+    uint64_t lo = 0, hi;
+
+    size_t s = std::min((size_t)8, (size_t)l);
+    switch (s) {
+    case 0: hi = 0; break;
+    case 8: hi = *reinterpret_cast<uint64_t*>(&vec[0]); break;
+    default: hi = 0; std::memcpy(&hi, &vec[0], s); break;
+    }
+
+    for (ptrdiff_t i = 0, j = i - shamt; i < l;) {
+
+        if ((i>>3) > (j>>3)) {
+            ptrdiff_t x = (i&~7)+8;
+            lo = hi;
+            size_t s = std::max((ptrdiff_t)0,std::min((ptrdiff_t)8, l-x));
+            switch (s) {
+            case 0: hi = 0; break;
+            case 8: hi = *reinterpret_cast<uint64_t*>(&vec[x]); break;
+            default: hi = 0; std::memcpy(&hi, &vec[x], s); break;
+            }
+        }
+        size_t y = (i&7)<<3;
+        uint64_t data = y == 0 ? lo : (lo >> y) | (hi << -y);
+
+        shamt = vlu_decoded_size_56c(data);
+        assert(shamt > 0 && shamt < 9);
+
+        items++;
+        j = i;
+        i += shamt;
+    }
+
+    return items;
+}
+#endif
 
 /*
  * vlu_encode_vec - encode array
@@ -273,6 +318,7 @@ static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src
 /*
  * vlu_decode_vec - decode array
  */
+#if USE_MISALIGNED_LOADS
 static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src)
 {
     size_t l = src.size();
@@ -303,6 +349,52 @@ static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src
         o++;
     }
 }
+#else
+static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src)
+{
+    ptrdiff_t l = src.size();
+
+    ptrdiff_t shamt = 8;
+    uint64_t lo = 0, hi;
+
+    size_t items = vlu_items_vec(src);
+    dst.resize(items);
+
+    size_t s = std::min((size_t)8, (size_t)l);
+    switch (s) {
+    case 0: hi = 0; break;
+    case 8: hi = *reinterpret_cast<uint64_t*>(&src[0]); break;
+    default: hi = 0; std::memcpy(&hi, &src[0], s); break;
+    }
+
+    size_t o = 0;
+    for (ptrdiff_t i = 0, j = i - shamt; i < l;) {
+
+        if ((i>>3) > (j>>3)) {
+            ptrdiff_t x = (i&~7)+8;
+            lo = hi;
+            size_t s = std::max((ptrdiff_t)0,std::min((ptrdiff_t)8, l-x));
+            switch (s) {
+            case 0: hi = 0; break;
+            case 8: hi = *reinterpret_cast<uint64_t*>(&src[x]); break;
+            default: hi = 0; std::memcpy(&hi, &src[x], s); break;
+            }
+        }
+        size_t y = (i&7)<<3;
+        uint64_t data = y == 0 ? lo : (lo >> y) | (hi << -y);
+
+        vlu_result r = vlu_decode_56c(data);
+        assert(r.shamt > 0);
+        assert(o < items);
+        dst[o] = r.val;
+
+        j = i;
+        i += r.shamt;
+        o++;
+    }
+}
+#endif
+
 
 /*
  * leb_encode_56 - LEB128 encoding up to 56-bits
