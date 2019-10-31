@@ -131,6 +131,11 @@ static int vlu_decoded_size_56c(uint64_t uvlu)
 
 /*
  * vlu_encode_56c - VLU8 encoding with continuation support
+ *
+ * returns {
+ *   val:   encoded value
+ *   shamt: shift value from 1 to 8, or -1 for continuation
+ * }
  */
 static struct vlu_result vlu_encode_56c(uint64_t num)
 {
@@ -142,35 +147,20 @@ static struct vlu_result vlu_encode_56c(uint64_t num)
     uint64_t uvlu = (num << shamt)
         | ((1ull << (shamt-1))-1)
         | ((uint64_t)cont << 7);
-    return (vlu_result) { uvlu, shamt };
+    return (vlu_result) { uvlu, shamt | -(int64_t)cont };
 }
 
 /*
  * vlu_decode_56c - VLU8 decoding with continuation support
+ *
+ * returns {
+ *   val:   decoded value
+ *   shamt: shift value from 1 to 8, or -1 for continuation
+ * }
  */
-
 #if defined (__GNUC__) && defined(__x86_64__)
 static vlu_result vlu_decode_56c(uint64_t vlu)
 {
-    /*
-     * Optimized Intel assembly language
-     *
-     *    mov     rcx, rdi
-     *    not     rcx
-     *    tzcnt   rcx, rcx
-     *    xor     rsi, rsi
-     *    cmp     rcx, 7
-     *    setne   sil
-     *    lea     rdx, [rcx + 1]
-     *    mov     rcx, 8
-     *    cmovg   rdx, rcx
-     *    shrx    rax, rdi, rdx
-     *    lea     rcx, [rdx * 8]
-     *    neg     rsi
-     *    shlx    rsi, rsi, rcx
-     *    andn    rax, rsi, rax
-     *    ret     ; struct { rax; rdx; }
-     */
     struct vlu_result r;
     uint64_t tmp1, tmp2;
     asm volatile (
@@ -179,14 +169,16 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
         "tzcnt   %[tmp1], %[tmp1]           \n\t" /* tz = ctz(~vlu) */
         "xor     %[tmp2], %[tmp2]           \n\t"
         "cmp     $7, %[tmp1]                \n\t"
-        "setne   %b[tmp2]                   \n\t" /* shamt > 7 */
+        "setg    %b[tmp2]                   \n\t" /* shamt > 7 */
         "lea     1(%[tmp1]), %[shamt]       \n\t" /* shamt = tz + 1*/
         "mov     $8, %[tmp1]                \n\t"
         "cmovg   %[tmp1], %[shamt]          \n\t" /* shamt > 7 ? 8 : shamt */
         "shrx    %[shamt], %[vlu], %[val]   \n\t" /* r = vlu >> shamt */
+        "neg     %[tmp2]                    \n\t" /* mk8 = -(shamt > 7) */
         "lea     0(,%[shamt],8), %[tmp1]    \n\t" /* sh8 = shamt * 7 */
         "sub     %[shamt], %[tmp1]          \n\t"
-        "neg     %[tmp2]                    \n\t" /* mk8 = -(shamt > 7) */
+        "or      %[tmp2], %[shamt]          \n\t" /* shamt |= -(shamt > 7) */
+        "not     %[tmp2]                    \n\t"
         "shlx    %[tmp1], %[tmp2], %[tmp2]  \n\t" /* mk8 << sh8 */
         "andn    %[val], %[tmp2], %[val]    " /* r & ~(mk8 << sh8) */
         : [val] "=&r" (r.val), [shamt] "=&r" (r.shamt),
@@ -204,7 +196,7 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
     int shamt = cont ? 8 : t1 + 1;
     uint64_t mask = ~(-(long long)!cont << (shamt * 7));
     uint64_t num = (vlu >> shamt) & mask;
-    return vlu_result{ num, shamt };
+    return (vlu_result) { num, shamt | -(int64_t)cont };
 }
 #endif
 

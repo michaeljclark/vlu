@@ -70,7 +70,7 @@ void test_encode_uvlu()
     assert(vlu_encode_56c(0x00ffffffffffffff).val == 0xffffffffffffff7f);
     assert(vlu_encode_56c(0x00ffffffffffffff).shamt == 8);
     assert(vlu_encode_56c(0xffffffffffffffff).val == 0xffffffffffffffff);
-    assert(vlu_encode_56c(0xffffffffffffffff).shamt == 8); /* continuation? */
+    assert(vlu_encode_56c(0xffffffffffffffff).shamt == -1); /* continuation */
 
     assert(vlu_decode_56c(0b0000).val == 0b0);
     assert(vlu_decode_56c(0b0000).shamt == 1);
@@ -87,7 +87,7 @@ void test_encode_uvlu()
     assert(vlu_decode_56c(0xffffffffffffff7f).val == 0x00ffffffffffffff);
     assert(vlu_decode_56c(0xffffffffffffff7f).shamt == 8);
     assert(vlu_decode_56c(0xffffffffffffffff).val == 0x00ffffffffffffff);
-    assert(vlu_decode_56c(0xffffffffffffffff).shamt == 8); /* continuation? */
+    assert(vlu_decode_56c(0xffffffffffffffff).shamt == -1); /* continuation */
 
     /* mask test */
     assert(vlu_decode_56c(0xff80 | vlu_encode_56c(0x7d).val).val == 0x7d);
