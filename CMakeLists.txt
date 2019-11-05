@@ -11,8 +11,8 @@ if (has_march_haswell)
 endif()
 
 # We need <chrono> and <random>
-#set(CMAKE_CXX_STANDARD 11)
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(vlu_test src/vlu_test.cc)
 add_executable(vlu_demo src/vlu_demo.cc)
