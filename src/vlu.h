@@ -139,7 +139,7 @@ static int vlu_decoded_size_56c(uint64_t uvlu)
  */
 static struct vlu_result vlu_encode_56c(uint64_t num)
 {
-    if (!num) return (vlu_result) { 0, 1 };
+    if (!num) return vlu_result{ 0, 1 };
     int lz = clz(num);
     int t1 = 8 - ((lz - 1) / 7);
     bool cont = t1 > 7;
@@ -147,7 +147,7 @@ static struct vlu_result vlu_encode_56c(uint64_t num)
     uint64_t uvlu = (num << shamt)
         | ((1ull << (shamt-1))-1)
         | ((uint64_t)cont << 7);
-    return (vlu_result) { uvlu, shamt | -(int64_t)cont };
+    return vlu_result{ uvlu, shamt | -(int64_t)cont };
 }
 
 /*
@@ -195,7 +195,7 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
     int shamt = cont ? 8 : t1 + 1;
     uint64_t mask = ~(-(int64_t)!cont << (shamt * 7));
     uint64_t num = (vlu >> shamt) & mask;
-    return (vlu_result) { num, shamt | -(int64_t)cont };
+    return vlu_result{ num, shamt | -(int64_t)cont };
 }
 #endif
 
@@ -316,7 +316,7 @@ static vlu_result leb_encode_56(uint64_t num)
         leb |= insert_field<uint64_t>(b, i*8, 8);
         if (num == 0) break;
     }
-    return (vlu_result) { leb, (int)i + 1 };
+    return vlu_result{ leb, (int)i + 1 };
 }
 
 /*
@@ -331,7 +331,7 @@ static vlu_result leb_decode_56(uint64_t leb)
         num |= insert_field<uint64_t>(b, i*7, 7);
         if (b >= 0) break;
     }
-    return (vlu_result) { num, (int)i + 1 };
+    return vlu_result{ num, (int)i + 1 };
 }
 
 /*
