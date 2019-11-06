@@ -109,23 +109,23 @@ struct vlu_result
 /*
  * vlu_encoded_size_56c - VLU8 packet size in bytes
  */
-static int vlu_encoded_size_56c(uint64_t num)
+static int vlu_encoded_size_56c(uint64_t num, uint64_t limit = 8)
 {
     if (!num) return 1;
     int lz = clz(num);
     int t1 = 8 - ((lz - 1) / 7);
-    bool cont = t1 > 7;
-    return cont ? 8 : t1 + 1;
+    bool cont = t1 >= limit;
+    return cont ? limit : t1 + 1;
 }
 
 /*
  * vlu_decoded_size_56c - VLU8 packet size in bytes
  */
-static int vlu_decoded_size_56c(uint64_t uvlu)
+static int vlu_decoded_size_56c(uint64_t uvlu, uint64_t limit = 8)
 {
     int t1 = ctz(~uvlu);
-    bool cont = t1 > 7;
-    int shamt = cont ? 8 : t1 + 1;
+    bool cont = t1 >= limit;
+    int shamt = cont ? limit : t1 + 1;
     return shamt;
 }
 
@@ -137,29 +137,31 @@ static int vlu_decoded_size_56c(uint64_t uvlu)
  *   shamt: shift value from 1 to 8, or -1 for continuation
  * }
  */
-static struct vlu_result vlu_encode_56c(uint64_t num)
+static struct vlu_result vlu_encode_56c(uint64_t num, uint64_t limit = 8)
 {
     if (!num) return vlu_result{ 0, 1 };
     int lz = clz(num);
     int t1 = 8 - ((lz - 1) / 7);
-    bool cont = t1 > 7;
-    int shamt = cont ? 8 : t1 + 1;
+    bool cont = t1 >= limit;
+    int shamt = cont ? limit : t1 + 1;
     uint64_t uvlu = (num << shamt)
         | ((1ull << (shamt-1))-1)
-        | ((uint64_t)cont << 7);
+        | ((uint64_t)cont << (limit-1));
     return vlu_result{ uvlu, shamt | -(int64_t)cont };
 }
 
 /*
  * vlu_decode_56c - VLU8 decoding with continuation support
  *
- * returns {
+ * @param vlu value to decode
+ * @param limit for continuation
+ * @returns (struct vlu_result) {
  *   val:   decoded value
  *   shamt: shift value from 1 to 8, or -1 for continuation
  * }
  */
 #if defined (__GNUC__) && defined(__x86_64__)
-static vlu_result vlu_decode_56c(uint64_t vlu)
+static vlu_result vlu_decode_56c(uint64_t vlu, uint64_t limit = 8)
 {
     struct vlu_result r;
     uint64_t tmp1, tmp2;
@@ -168,31 +170,31 @@ static vlu_result vlu_decode_56c(uint64_t vlu)
         "not     %[tmp1]                    \n\t" /* ~vlu */
         "tzcnt   %[tmp1], %[tmp1]           \n\t" /* tz = ctz(~vlu) */
         "xor     %[tmp2], %[tmp2]           \n\t"
-        "cmp     $7, %[tmp1]                \n\t"
-        "setg    %b[tmp2]                   \n\t" /* shamt > 7 */
+        "cmp     %[limit], %[tmp1]          \n\t"
+        "setge   %b[tmp2]                   \n\t" /* shamt >= limit */
         "lea     1(%[tmp1]), %[shamt]       \n\t" /* shamt = tz + 1*/
-        "mov     $8, %[tmp1]                \n\t"
-        "cmovg   %[tmp1], %[shamt]          \n\t" /* shamt > 7 ? 8 : shamt */
-        "imul    $7, %[shamt], %[tmp1]      \n\t"
+        "mov     %[limit], %[tmp1]          \n\t"
+        "cmovg   %[tmp1], %[shamt]          \n\t" /* shamt >= limit */
+        "imul    $7, %[shamt], %[tmp1]      \n\t" /* st7 = shamt * 7 */
         "shrx    %[shamt], %[vlu], %[val]   \n\t" /* r = vlu >> shamt */
-        "neg     %[tmp2]                    \n\t" /* mk8 = -(shamt > 7) */
-        "or      %[tmp2], %[shamt]          \n\t" /* shamt |= -(shamt > 7) */
+        "neg     %[tmp2]                    \n\t" /* mk8 = -(shamt >= limit) */
+        "or      %[tmp2], %[shamt]          \n\t" /* shamt |= -(shamt >= limit) */
         "not     %[tmp2]                    \n\t"
-        "shlx    %[tmp1], %[tmp2], %[tmp2]  \n\t" /* mk8 << sh8 */
-        "andn    %[val], %[tmp2], %[val]    " /* r & ~(mk8 << sh8) */
+        "shlx    %[tmp1], %[tmp2], %[tmp2]  \n\t" /* mask << st7 */
+        "andn    %[val], %[tmp2], %[val]    " /* r & ~(mask << st7) */
         : [val] "=&r" (r.val), [shamt] "=&r" (r.shamt),
           [tmp1] "=&r" (tmp1), [tmp2] "=&r" (tmp2)
-        : [vlu] "r" (vlu)
+        : [vlu] "r" (vlu), [limit] "r" (limit)
         : "cc"
     );
     return r;
 }
 #else
-static vlu_result vlu_decode_56c(uint64_t vlu)
+static vlu_result vlu_decode_56c(uint64_t vlu, uint64_t limit = 8)
 {
     int t1 = ctz(~vlu);
-    bool cont = t1 > 7;
-    int shamt = cont ? 8 : t1 + 1;
+    bool cont = t1 >= limit;
+    int shamt = cont ? limit : t1 + 1;
     uint64_t mask = ~(-(int64_t)!cont << (shamt * 7));
     uint64_t num = (vlu >> shamt) & mask;
     return vlu_result{ num, shamt | -(int64_t)cont };

@@ -53,28 +53,29 @@ unary code decoding to 8-bits and signaling a continuation if all
 
 ### Encoder pseudo-code
 
-simple implementation:
+simple implementation without continuation:
 
 ```
   t1       = 8 - ((clz(num) - 1) / 7)
   shamt    = t1 + 1
   if num ≠ 0 then:
-      encoded = (integer << shamt) | ((1 << (shamt - 1)) - 1)
+      encoded = (integer << shamt) | ((1 << (shamt-1))-1)
 ```
 
 with bit-8 continuations:
 
 ```
+  limit    = 8
   t1       = 8 - ((clz(num) - 1) / 7)
-  cont     = t1 > 7
-  shamt    = cont ? 8 : t1 + 1
+  cont     = t1 >= limit
+  shamt    = cont ? limit : t1 + 1
   if num ≠ 0 then:
-      encoded = (integer << shamt) | ((1 << (shamt - 1)) - 1) | (cont << 8)
+      encoded = (integer << shamt) | ((1 << (shamt-1))-1) | (cont << (limit-1))
 ```
 
 ### Decoder pseudo-code
 
-simple implementation:
+simple implementation without continuation:
 
 ```
   t1       = ctz(~encoded)
@@ -85,9 +86,10 @@ simple implementation:
 with bit-8 continuations:
 
 ```
+  limit    = 8
   t1       = ctz(encoded)
-  cont     = t1 > 7
-  shamt    = cont ? 8 : t1 + 1
+  cont     = t1 >= limit
+  shamt    = cont ? limit : t1 + 1
   integer  = (encoded >> shamt) & ((1 << (shamt * 7)) - 1)
 ```
 
