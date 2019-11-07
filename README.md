@@ -2,75 +2,86 @@
 
 ## Overview
 
-VLU is a little-endian variable length integer coding
-that prefixes payload bits with an unary coded length.
+VLU is a little-endian variable length integer coding that prefixes
+data bits with unary coded length bits.
 
-The length is recovered by counting least significant one
-bits, which encodes a count of n-bit quantums. The data bits
-are stored in the remaining bits of the first n-bit quantum
-followed by the number of bits indicated by the unary value.
+The length is recovered by counting least significant set bits,
+which encode a count of _n-bit_ basic units. The data bits compactly
+trail the unary coded prefix.
 
 ![vlu](/images/vlu.png)
 _Figure 1: VLU - Variable Length Unary Integer Coding_
 
-The algorithm is parameterizable for different word and packet
-sizes, however it is expected that an 8 bit quantum is used.
+The algorithm is parameterizable for different basic unit sizes,
+however it is expected that the basic unit will be 8 and thus the
+unary coded length will encode a count of octets or bytes. e.g.
 
 ```
-  bits_per_quantum = 8
-  unary_value = count_trailing_zeros(not(number))
-  encoded_bits = (unary_value + 1) * (bits_per_quantum - 1)
+  bits_per_unit = 8
+  unary_value   = count_trailing_zeros(~number)
+  encoded_bits  = (unary_value + 1) * (bits_per_unit - 1)
 ```
 
-With 8 bit quantum, the encoded size is similar to LEB128, 
-7-bits can be stored in 1 byte, and 56-bits in 8 bytes.
-Decoding, however, is significantly faster, as it is not
-necessary to check for continuation bits every byte.
+With an 8 bit basic unit, the encoded size is similar to LEB128;
+7-bits can be stored in 1 byte, 56-bits in 8 bytes and 112-bits
+in 16 bytes. Decoding, however, is significantly faster than LEB128,
+as it is not necessary to check for continuation bits every byte,
+instead the length can be decoded in a single count bits operation.
 
-The code can support integers larger than 56-bits by
-interpreting the most significant bit of the unary indicator
-(bit 8 where the n-bit quantum is 8), as a continuation code,
-causing the decoder to append the maximum number of bits from
-the packet and continue decoding by appending the next packet.
+The unary code size can be limited to support splitting the length
+prefix and the integer value across multiple words, by interpreting
+the most significant bit of a prefix limit, as a continuation code,
+effectively dividing the bits into two streams; the prefix value
+containing length, and the remaining bits containing binary data.
+
+With a basic unit size of 8 and a limit of 16, an 112-bit value
+can be encoded using a 16-bit length prefix and 112 bits of data.
 
 ```
-  packet_total_bits = bits_per_quantum ^ 2
-  packet_payload_bits = bits_per_quantum * (bits_per_quantum - 1)
+  bits_per_unit = 8
+  prefix_limit  = 16
+  interval_size = 128 (8 * 16)
 ```
 
-An 8-bit quantum for the unary code means the packet size is
-one machine word (64 bits).
-This reduces the SHIFT-MASK-BRANCH frequency by a factor of 8
-compared to per-byte continuation codes like LEB128. A VLU8
-implementation can fetch 64-bits and process 56-bits at once.
-VLU with an 8-bit quantum shall be referred to as VLU8.
+This encoding reduces the SHIFT-MASK-BRANCH frequency in scalar code
+by a factor of 8 compared to per-byte continuation codes like LEB128.
+VLU with an 8-bit quantum and 16-bit prefix limit shall be referred
+to as VLU8.
 
 ### Continuation support
 
-It is possible to implement a simple continuation scheme limiting
-unary code decoding to 8-bits and signaling a continuation if all
-8 bits of the first byte are set.
+Values larger than 112-bits can be encoded by setting bit 16 and
+continuing the prefix and data in another 128-bit interval. This
+requires a minimum read of one byte, and optimally 16-bits, to
+read the length of the first interval.
+
+For VLU8, the bits per unit is 8, the prefix limit can be 8 or 16,
+the number of bits encoded per interval is 56 or 112, and the
+interval sizes 64-bits or 128-bits. The choice of interval size
+depends on the intended application. It is possible to have
+an alternate encoding for the length in subsequent data, size as
+encoding the length as a fixed size binary field.
 
 ### Encoder pseudo-code
 
 simple implementation without continuation:
 
 ```
-  t1       = 8 - ((clz(num) - 1) / 7)
-  shamt    = t1 + 1
+  t1            = units_per_word - ((clz(num) - 1) / (bits_per_unit - 1))
+  shamt         = t1 + 1
   if num ≠ 0 then:
-      encoded = (integer << shamt) | ((1 << (shamt-1))-1)
+        encoded = (integer << shamt) | ((1 << (shamt-1))-1)
 ```
 
 with bit-8 continuations:
 
 ```
-  limit    = 8
-  t1       = 8 - ((clz(num) - 1) / 7)
-  cont     = t1 >= limit
-  shamt    = cont ? limit : t1 + 1
+  t1            = units_per_word - ((clz(num) - 1) / (bits_per_unit - 1))
+  cont          = t1 >= prefix_limit
+  shamt         = cont ? prefix_limit : t1 + 1
   if num ≠ 0 then:
-      encoded = (integer << shamt) | ((1 << (shamt-1))-1) | (cont << (limit-1))
+        encoded = (integer << shamt) | ((1 << (shamt - 1)) - 1)
+                | (cont << (prefix_limit - 1))
 ```
 
 ### Decoder pseudo-code
@@ -78,20 +89,25 @@ with bit-8 continuations:
 simple implementation without continuation:
 
 ```
-  t1       = ctz(~encoded)
-  shamt    = t1 + 1
-  integer  = (encoded >> shamt) & ((1 << (shamt * 7)) - 1)
+  t1            = ctz(~encoded)
+  shamt         = t1 + 1
+  integer       = (encoded >> shamt) & ((1 << (shamt * 7)) - 1)
 ```
 
 with bit-8 continuations:
 
 ```
-  limit    = 8
-  t1       = ctz(encoded)
-  cont     = t1 >= limit
-  shamt    = cont ? limit : t1 + 1
-  integer  = (encoded >> shamt) & ((1 << (shamt * 7)) - 1)
+  prefix_limit  = 8
+  t1            = ctz(~encoded)
+  cont          = t1 >= prefix_limit
+  shamt         = cont ? prefix_limit : t1 + 1
+  integer       = (encoded >> shamt) & ((1 << (shamt * 7)) - 1)
 ```
+
+### Notes
+
+- `clz` is an abbreviation of `count_leading_zeros`
+- `ctz` is an abbreviation of `count_trailing_zeros`
 
 ## Benchmarks
 
