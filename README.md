@@ -3,18 +3,18 @@
 ## Overview
 
 VLU is a little-endian variable length integer coding that prefixes
-data bits with unary coded length bits.
+data bits with unary code length bits.
 
 The length is recovered by counting least significant set bits,
 which encode a count of _n-bit_ basic units. The data bits compactly
-trail the unary coded prefix.
+trail the unary code prefix.
 
 ![vlu](/images/vlu.png)
 _Figure 1: VLU - Variable Length Unary Integer Coding_
 
 The algorithm is parameterizable for different basic unit sizes,
 however it is expected that the basic unit will be 8 and thus the
-unary coded length will encode a count of octets or bytes. e.g.
+unary code length will encode a count of octets or bytes. e.g.
 
 ```
   bits_per_unit = 8
