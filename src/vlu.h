@@ -99,10 +99,13 @@ static U replace_field(U orig, U replacement, size_t offset, size_t width) {
  *
  *   |  byte-8  |  byte-7  |          |  byte-2  |  byte-1  |
  *   |----------|----------|----------|----------|----------|
- *   |          |          |          |          | nnnnnnn0 |
- *   |          |          |          | nnnnnnnn | nnnnnn01 |
- *   |          | nnnnnnnn | ........ | nnnnnnnn | n0111111 |
- *   | nnnnnnnn | nnnnnnnn | ........ | nnnnnnnn | 01111111 |
+ *   |          |          |          |          | nnnnnnn0 | 7-bit
+ *   |          |          |          | nnnnnnnn | nnnnnn01 | 14-bit
+ *   ~          ~          ~          ~          ~          ~
+ *   |          | nnnnnnnn | ........ | nnnnnnnn | n0111111 | 49-bit
+ *   | nnnnnnnn | nnnnnnnn | ........ | nnnnnnnn | 01111111 | 56-bit
+ *   ~          ~          ~          ~          ~          ~
+ *   | nnnnnnnn | nnnnnnnn | ........ | 01111111 | 11111111 | 112-bit
  *
  */
 
