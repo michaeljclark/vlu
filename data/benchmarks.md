@@ -13,9 +13,9 @@
 |LEB_56-raw decode (random-8)    |1048576   |1000      |8000      |3810777   |    2.050 |
 |LEB_56-raw decode (random-56)   |1048576   |1000      |8000      |4298733   |    1.817 |
 |LEB_56-raw decode (random-mix)  |1048576   |1000      |8000      |7295214   |    1.071 |
-|VLU_56-pack encode (random-8)   |1048576   |1000      |8000      |8688817   |    0.899 |
-|VLU_56-pack encode (random-56)  |1048576   |1000      |8000      |4705742   |    1.660 |
-|VLU_56-pack encode (random-mix) |1048576   |1000      |8000      |10984168  |    0.711 |
+|VLU_56-pack encode (random-8)   |1048576   |1000      |8000      |9041276   |    0.864 |
+|VLU_56-pack encode (random-56)  |1048576   |1000      |8000      |4485687   |    1.742 |
+|VLU_56-pack encode (random-mix) |1048576   |1000      |8000      |9325580   |    0.838 |
 |VLU_56-pack decode (random-8)   |1048576   |1000      |8000      |6318240   |    1.236 |
 |VLU_56-pack decode (random-56)  |1048576   |1000      |8000      |6314234   |    1.237 |
 |VLU_56-pack decode (random-mix) |1048576   |1000      |8000      |6391206   |    1.222 |
