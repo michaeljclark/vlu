@@ -33,8 +33,8 @@
 #include "bits.h"
 
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64) || defined(_M_AMD64)
-#ifndef USE_MISALIGNED_LOADS
-#define USE_MISALIGNED_LOADS 1
+#ifndef USE_UNALIGNED_ACCESSES
+#define USE_UNALIGNED_ACCESSES 1
 #endif
 #endif
 
@@ -224,7 +224,7 @@ static size_t vlu_size_vec(std::vector<uint64_t> &vec)
 /*
  * vlu_size_vec - get size of array
  */
-#if USE_MISALIGNED_LOADS
+#if USE_UNALIGNED_ACCESSES
 static size_t vlu_items_vec(std::vector<uint8_t> &vec)
 {
     size_t items = 0;
@@ -294,7 +294,7 @@ static size_t vlu_items_vec(std::vector<uint8_t> &vec)
 /*
  * vlu_encode_vec - encode array
  */
-#if USE_MISALIGNED_LOADS
+#if USE_UNALIGNED_ACCESSES
 static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src)
 {
     size_t l = src.size();
@@ -366,7 +366,7 @@ static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src
 /*
  * vlu_decode_vec - decode array
  */
-#if USE_MISALIGNED_LOADS
+#if USE_UNALIGNED_ACCESSES
 static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src)
 {
     size_t l = src.size();
