@@ -290,6 +290,7 @@ static size_t vlu_items_vec(std::vector<uint8_t> &vec)
 /*
  * vlu_encode_vec - encode array
  */
+#if USE_MISALIGNED_LOADS
 static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src)
 {
     size_t l = src.size();
@@ -298,6 +299,7 @@ static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src
     size_t items = vlu_size_vec(src);
     dst.resize(items);
 
+    ptrdiff_t i = 0;
     for (uint64_t v : src)
     {
         vlu_result r = vlu_encode_56c(v);
@@ -314,6 +316,48 @@ static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src
         o += r.shamt;
     }
 }
+#else
+static void vlu_encode_vec(std::vector<uint8_t> &dst, std::vector<uint64_t> &src)
+{
+    size_t o = 0;
+
+    uint64_t lo = 0, hi = 0;
+
+    size_t items = vlu_size_vec(src);
+    dst.resize(items);
+    ptrdiff_t l = dst.size();
+
+    ptrdiff_t i = 0, j = 0;
+    for (uint64_t v : src)
+    {
+        vlu_result r = vlu_encode_56c(v);
+
+        size_t y = (i&7)<<3;
+        if (y == 0) {
+            lo = r.val;
+        } else {
+            lo |= (r.val << y);
+            hi |= (r.val >> -y);
+        }
+
+        j = i;
+        i += r.shamt;
+        o++;
+
+        if ((i>>3) > (j>>3)) {
+            ptrdiff_t x = (i&~7)-8;
+            size_t s = std::max((ptrdiff_t)0,std::min((ptrdiff_t)8, l-x));
+            switch (s) {
+            case 0: lo = 0; break;
+            case 8: *reinterpret_cast<uint64_t*>(&dst[x]) = lo; lo = 0; break;
+            default: std::memcpy(&dst[x], &lo, s); lo = 0; break;
+            }
+            lo = hi;
+            hi = 0;
+        }
+    }
+}
+#endif
 
 /*
  * vlu_decode_vec - decode array
