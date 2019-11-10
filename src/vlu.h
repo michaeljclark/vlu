@@ -398,7 +398,6 @@ static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src
 {
     ptrdiff_t l = src.size();
 
-    ptrdiff_t shamt = 8;
     uint64_t lo = 0, hi;
 
     size_t items = vlu_items_vec(src);
@@ -412,7 +411,7 @@ static void vlu_decode_vec(std::vector<uint64_t> &dst, std::vector<uint8_t> &src
     }
 
     size_t o = 0;
-    for (ptrdiff_t i = 0, j = i - shamt; i < l;) {
+    for (ptrdiff_t i = 0, j = i - 8; i < l;) {
 
         if ((i>>3) > (j>>3)) {
             ptrdiff_t x = (i&~7)+8;
