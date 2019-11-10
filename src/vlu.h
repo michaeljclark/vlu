@@ -32,7 +32,11 @@
 
 #include "bits.h"
 
-#define USE_MISALIGNED_LOADS 0
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64) || defined(_M_AMD64)
+#ifndef USE_MISALIGNED_LOADS
+#define USE_MISALIGNED_LOADS 1
+#endif
+#endif
 
 /*
  * Bit field macros
