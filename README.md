@@ -150,7 +150,7 @@ struct vlu_result
 Example 64-bit VLU encoder:
 
 ```C
-struct vlu_result vlu_encode_56c(uint64_t num)
+struct vlu_result vlu_encode_56(uint64_t num)
 {
     if (!num) return (vlu_result) { 0, 1 };
     int lz = __builtin_clzll(num);
@@ -169,7 +169,7 @@ struct vlu_result vlu_encode_56c(uint64_t num)
 Example 64-bit VLU decoder:
 
 ```C
-struct vlu_result vlu_decode_56c(uint64_t uvlu)
+struct vlu_result vlu_decode_56(uint64_t uvlu)
 {
     int t1 = __builtin_ctzll(~uvlu);
     bool cont = t1 > 7;
@@ -208,7 +208,7 @@ simply shifts the 64-bit word by the number of bits in the unary code._
 **continuation support** _(unlimited)_:
 
 ```
-vlu_decode_56c:
+vlu_decode_56:
         mov     rax, rdi
         not     rax
         tzcnt   rax, rax
@@ -231,7 +231,7 @@ count, so that the condition code register is undisturbed._
 **continuations and subword masking**:
 
 ```
-vlu_decode_56c:
+vlu_decode_56:
         mov     rcx, rdi
         not     rcx
         tzcnt   rcx, rcx

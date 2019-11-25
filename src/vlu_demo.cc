@@ -58,12 +58,12 @@ static void print_binary(const char* name, int64_t aux, uint64_t val)
 
 static void print_one_uvlu(uint64_t val)
 {
-    uint64_t vlu = vlu_encode_56c(val).val;
-    uint64_t num = vlu_decode_56c(vlu).val;
+    uint64_t vlu = vlu_encode_56(val).val;
+    uint64_t num = vlu_decode_56(vlu).val;
 
-    print_binary("IN       ", vlu_encoded_size_56c(val), val);
-    print_binary(" \\VLU    ", vlu_encode_56c(val).shamt, vlu);
-    print_binary("   \\OUT  ", vlu_decode_56c(vlu).shamt, num);
+    print_binary("IN       ", vlu_encoded_size_56(val), val);
+    print_binary(" \\VLU    ", vlu_encode_56(val).shamt, vlu);
+    print_binary("   \\OUT  ", vlu_decode_56(vlu).shamt, num);
 
     printf("%s\n", num == val ? "PASS" : "FAIL");
 }
