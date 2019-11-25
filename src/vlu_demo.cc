@@ -35,7 +35,6 @@
 #include <string>
 
 #include "vlu.h"
-#include "vlu_bench.h"
 
 /*
  * binary string formatting

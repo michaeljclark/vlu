@@ -35,7 +35,41 @@
 #include <string>
 
 #include "vlu.h"
-#include "vlu_bench.h"
+
+/*
+ * random numbers
+ */
+
+struct bench_random
+{
+    std::random_device random_device;
+    std::default_random_engine random_engine;
+    std::uniform_int_distribution<uint64_t> random_dist_8;
+    std::uniform_int_distribution<uint64_t> random_dist_56;
+
+    bench_random() :
+        random_engine(random_device()),
+        random_dist_8(0,(1ull<<8)-1ull),
+        random_dist_56(0,(1ull<<56)-1ull) {}
+    bench_random(bench_random&&) : bench_random() {}
+
+    uint64_t pure_8() {
+        /* random numbers from 0 - 2^8-1 */
+        return random_dist_8(random_engine);
+    }
+
+    uint64_t pure_56() {
+        /* random numbers from 0 - 2^56-1 */
+        return random_dist_56(random_engine);
+    }
+
+    uint64_t mix_56() {
+        /* random numbers from 0 - 2^56-1 */
+        uint64_t val = random_dist_56(random_engine);
+        /* (p=0.125 for each size) randomly choose 1 to 8 bytes */
+        return val >> ((val & 0x7) << 3);
+    }
+};
 
 /*
  * simple tests
